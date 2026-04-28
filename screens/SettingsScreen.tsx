@@ -1,0 +1,265 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  Switch,
+  Platform,
+} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useEvents } from '../contexts/EventContext';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+type SettingsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Settings'
+>;
+
+interface Props {
+  navigation: SettingsScreenNavigationProp;
+}
+
+export default function SettingsScreen({ navigation }: Props) {
+  const { settings, updateSettings } = useEvents();
+
+  const [formData, setFormData] = useState({
+    arrivalBuffer: settings.arrivalBuffer,
+    defaultDepartureLocation: settings.defaultDepartureLocation,
+    extraTime: settings.extraTime,
+    departureNotification: settings.departureNotification,
+    arrivalNotification: settings.arrivalNotification,
+  });
+
+  const handleSave = () => {
+    updateSettings(formData);
+    navigation.goBack();
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
+        </TouchableOpacity>
+        <Text style={styles.title}>설정</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        {/* 도착 기준 시간 */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="time-outline" size={20} color="#4a9d6f" />
+            <Text style={styles.sectionTitle}>도착 기준 시간 (콜타임)</Text>
+          </View>
+          <Text style={styles.sectionDescription}>
+            행사 시작 전 얼마나 일찍 도착할지 설정하세요 (분)
+          </Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              keyboardType="number-pad"
+              value={String(formData.arrivalBuffer)}
+              onChangeText={(text) =>
+                setFormData({ ...formData, arrivalBuffer: parseInt(text) || 0 })
+              }
+            />
+            <Text style={styles.unit}>분</Text>
+          </View>
+        </View>
+
+        {/* 기본 출발지 */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="location-outline" size={20} color="#4a9d6f" />
+            <Text style={styles.sectionTitle}>기본 출발지</Text>
+          </View>
+          <Text style={styles.sectionDescription}>자주 사용하는 출발 위치를 설정하세요</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="예: 서울시 강남구"
+            value={formData.defaultDepartureLocation}
+            onChangeText={(text) =>
+              setFormData({ ...formData, defaultDepartureLocation: text })
+            }
+          />
+        </View>
+
+        {/* 여유 시간 */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="time-outline" size={20} color="#4a9d6f" />
+            <Text style={styles.sectionTitle}>여유 시간</Text>
+          </View>
+          <Text style={styles.sectionDescription}>
+            예상 시간 외 추가로 확보할 시간 (분)
+          </Text>
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              keyboardType="number-pad"
+              value={String(formData.extraTime)}
+              onChangeText={(text) =>
+                setFormData({ ...formData, extraTime: parseInt(text) || 0 })
+              }
+            />
+            <Text style={styles.unit}>분</Text>
+          </View>
+        </View>
+
+        {/* 알림 설정 */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="notifications-outline" size={20} color="#4a9d6f" />
+            <Text style={styles.sectionTitle}>알림 설정</Text>
+          </View>
+          <Text style={styles.sectionDescription}>일정에 대한 알림을 관리하세요</Text>
+
+          <View style={styles.switchCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.switchLabel}>출발 알림</Text>
+              <Text style={styles.switchDescription}>출발 시간에 알림을 받습니다</Text>
+            </View>
+            <Switch
+              value={formData.departureNotification}
+              onValueChange={(value) =>
+                setFormData({ ...formData, departureNotification: value })
+              }
+              trackColor={{ false: '#d1d5db', true: '#4a9d6f' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          <View style={styles.switchCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.switchLabel}>도착 알림</Text>
+              <Text style={styles.switchDescription}>도착 예정 시간에 알림을 받습니다</Text>
+            </View>
+            <Switch
+              value={formData.arrivalNotification}
+              onValueChange={(value) =>
+                setFormData({ ...formData, arrivalNotification: value })
+              }
+              trackColor={{ false: '#d1d5db', true: '#4a9d6f' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>저장하기</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafbfc',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 16 : 48,
+    backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    padding: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#4a9d6f',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginBottom: 16,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  unit: {
+    fontSize: 16,
+    color: '#6c757d',
+  },
+  switchCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  switchDescription: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  footer: {
+    padding: 24,
+    backgroundColor: '#FFFFFF',
+  },
+  saveButton: {
+    height: 56,
+    backgroundColor: '#4a9d6f',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+});
