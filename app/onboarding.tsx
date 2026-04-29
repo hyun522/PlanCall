@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -11,23 +11,14 @@ import {
   View,
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
-import { RootStackParamList } from "../navigation/AppNavigator";
 
-type OnboardingScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Onboarding"
->;
-
-interface Props {
-  navigation: OnboardingScreenNavigationProp;
-}
-
-export default function OnboardingScreen({ navigation }: Props) {
+export default function OnboardingScreen() {
   const { updateSettings } = useEvents();
+  const router = useRouter();
 
   const handleStart = () => {
     updateSettings({ hasCompletedOnboarding: true });
-    navigation.replace("EventList");
+    router.replace("/");
   };
 
   return (

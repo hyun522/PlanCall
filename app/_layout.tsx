@@ -1,17 +1,21 @@
-import { Stack } from "expo-router";
+import { Redirect, Slot } from "expo-router";
+import React from "react";
+import { EventProvider, useEvents } from "../contexts/EventContext";
 
-export default function RootLayout() {
-  return <Stack />;
+function RootLayoutContent() {
+  const { settings } = useEvents();
+
+  if (!settings.hasCompletedOnboarding) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  return <Slot />;
 }
 
-// import React from "react";
-// import EventProvider from "../contexts/EventContext";
-// import AppNavigator from "../navigation/AppNavigator";
-
-// export default function RootLayout() {
-//   return (
-//     <EventProvider>
-//       <AppNavigator />
-//     </EventProvider>
-//   );
-// }
+export default function RootLayout() {
+  return (
+    <EventProvider>
+      <RootLayoutContent />
+    </EventProvider>
+  );
+}

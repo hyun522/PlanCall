@@ -1,69 +1,75 @@
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-  View,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
-import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
-import { useEvents } from '../contexts/EventContext';
-import { RootStackParamList } from '../navigation/AppNavigator';
+  View,
+} from "react-native";
+import { useEvents } from "../contexts/EventContext";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'EditEvent'>;
-
-export default function EditEventScreen({ navigation, route }: Props) {
+export default function EditEventScreen() {
   const { events, updateEvent, deleteEvent } = useEvents();
-  const { eventId } = route.params;
+  const router = useRouter();
+  const { eventId } = useLocalSearchParams();
 
   const event = events.find((e) => e.id === eventId);
 
+  const [formData, setFormData] = useState({
+    eventName: event?.eventName || '',
+    eventDate: event?.eventDate || '',
+    eventTime: event?.eventTime || '',
+    location: event?.location || '',
+  });
+
   if (!event) {
-    navigation.goBack();
+    router.back();
     return null;
   }
 
-  const [formData, setFormData] = useState({
-    eventName: event.eventName,
-    eventDate: event.eventDate,
-    eventTime: event.eventTime,
-    location: event.location,
-  });
-
   const handleSave = () => {
-    updateEvent(eventId, {
+    updateEvent(eventId as string, {
       ...event,
       ...formData,
     });
-    navigation.goBack();
+    router.back();
   };
 
   const handleDelete = () => {
-    deleteEvent(eventId);
-    navigation.goBack();
+    deleteEvent(eventId as string);
+    router.back();
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.title}>일정 수정</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.field}>
           <Text style={styles.label}>일정 이름</Text>
           <TextInput
             style={styles.input}
             value={formData.eventName}
-            onChangeText={(text) => setFormData({ ...formData, eventName: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, eventName: text })
+            }
           />
         </View>
 
@@ -72,7 +78,9 @@ export default function EditEventScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             value={formData.eventDate}
-            onChangeText={(text) => setFormData({ ...formData, eventDate: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, eventDate: text })
+            }
           />
         </View>
 
@@ -81,7 +89,9 @@ export default function EditEventScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             value={formData.eventTime}
-            onChangeText={(text) => setFormData({ ...formData, eventTime: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, eventTime: text })
+            }
           />
         </View>
 
@@ -90,7 +100,9 @@ export default function EditEventScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             value={formData.location}
-            onChangeText={(text) => setFormData({ ...formData, location: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, location: text })
+            }
           />
         </View>
 
@@ -112,23 +124,23 @@ export default function EditEventScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafbfc',
+    backgroundColor: "#fafbfc",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
-    paddingTop: Platform.OS === 'ios' ? 16 : 48,
-    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === "ios" ? 16 : 48,
+    backgroundColor: "#FFFFFF",
   },
   backButton: {
     padding: 8,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#4a9d6f',
+    fontWeight: "600",
+    color: "#4a9d6f",
   },
   content: {
     flex: 1,
@@ -141,49 +153,49 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
     marginBottom: 8,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     height: 48,
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: "#ef4444",
     borderRadius: 8,
     marginTop: 20,
   },
   deleteButtonText: {
-    color: '#ef4444',
+    color: "#ef4444",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   footer: {
     padding: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   saveButton: {
     height: 56,
-    backgroundColor: '#4a9d6f',
+    backgroundColor: "#4a9d6f",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
