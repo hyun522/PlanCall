@@ -1,3 +1,6 @@
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -12,11 +15,38 @@ import {
   View,
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
+import { isValidEventDate } from "../utils/dateValidation";
 import {
   calculateArrivalTime,
   calculateDepartureTime,
   calculateTravelTime,
 } from "../utils/travelCalculator";
+
+type PickerMode = "date" | "time";
+
+const padTwoDigits = (value: number) => value.toString().padStart(2, "0");
+
+const formatDate = (date: Date) =>
+  `${date.getFullYear()}-${padTwoDigits(date.getMonth() + 1)}-${padTwoDigits(
+    date.getDate(),
+  )}`;
+
+const formatTime = (date: Date) =>
+  `${padTwoDigits(date.getHours())}:${padTwoDigits(date.getMinutes())}`;
+
+const getPickerDate = (eventDate: string, eventTime: string) => {
+  const [year, month, day] = eventDate.split("-").map(Number);
+  const [hours, minutes] = eventTime.split(":").map(Number);
+  const fallback = new Date();
+
+  return new Date(
+    Number.isFinite(year) ? year : fallback.getFullYear(),
+    Number.isFinite(month) ? month - 1 : fallback.getMonth(),
+    Number.isFinite(day) ? day : fallback.getDate(),
+    Number.isFinite(hours) ? hours : fallback.getHours(),
+    Number.isFinite(minutes) ? minutes : fallback.getMinutes(),
+  );
+};
 
 export default function AddEventScreen() {
   const { addEvent, settings } = useEvents();
@@ -36,11 +66,99 @@ export default function AddEventScreen() {
     departureTime: string;
     arrivalTime: string;
   } | null>(null);
+  const [visiblePicker, setVisiblePicker] = useState<PickerMode | null>(null);
+
+  const updateScheduleDateTime = (mode: PickerMode, date: Date) => {
+    setCalculated(null);
+    setFormData((current) => ({
+      ...current,
+      eventDate: mode === "date" ? formatDate(date) : current.eventDate,
+      eventTime: mode === "time" ? formatTime(date) : current.eventTime,
+    }));
+  };
+
+  const handleNativePickerChange = (
+    mode: PickerMode,
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
+    if (Platform.OS === "android") {
+      setVisiblePicker(null);
+    }
+
+    if (event.type === "dismissed" || !selectedDate) {
+      return;
+    }
+
+    updateScheduleDateTime(mode, selectedDate);
+  };
+
+  const renderPickerField = (
+    mode: PickerMode,
+    label: string,
+    value: string,
+    placeholder: string,
+    iconName: keyof typeof Ionicons.glyphMap,
+  ) => {
+    if (Platform.OS === "web") {
+      return (
+        <View style={[styles.field, { flex: 1 }]}>
+          <Text style={styles.label}>{label}</Text>
+          {React.createElement("input", {
+            type: mode,
+            value,
+            onClick: (event: React.MouseEvent<HTMLInputElement>) => {
+              event.currentTarget.showPicker?.();
+            },
+            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+              const nextValue = event.target.value;
+              setCalculated(null);
+              setFormData((current) => ({
+                ...current,
+                eventDate: mode === "date" ? nextValue : current.eventDate,
+                eventTime: mode === "time" ? nextValue : current.eventTime,
+              }));
+            },
+            onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
+              event.preventDefault();
+            },
+            onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => {
+              event.preventDefault();
+            },
+            style: styles.webPickerInput,
+            "aria-label": label,
+          })}
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.field, { flex: 1 }]}>
+        <Text style={styles.label}>{label}</Text>
+        <TouchableOpacity
+          style={styles.pickerButton}
+          activeOpacity={0.8}
+          onPress={() => setVisiblePicker(mode)}
+        >
+          <Text
+            style={[
+              styles.pickerButtonText,
+              !value && styles.pickerButtonPlaceholder,
+            ]}
+          >
+            {value || placeholder}
+          </Text>
+          <Ionicons name={iconName} size={20} color="#4a9d6f" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const handleCalculate = () => {
     if (
       !formData.departureLocation ||
       !formData.location ||
+      !isValidEventDate(formData.eventDate) ||
       !formData.eventTime
     ) {
       return;
@@ -72,7 +190,7 @@ export default function AddEventScreen() {
     if (
       !calculated ||
       !formData.eventName ||
-      !formData.eventDate ||
+      !isValidEventDate(formData.eventDate) ||
       !formData.eventTime
     ) {
       return;
@@ -95,12 +213,13 @@ export default function AddEventScreen() {
     router.back();
   };
 
-  const isFormValid =
+  const isFormValid = Boolean(
     formData.eventName &&
-    formData.eventDate &&
+    isValidEventDate(formData.eventDate) &&
     formData.eventTime &&
     formData.location &&
-    formData.departureLocation;
+    formData.departureLocation,
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,29 +253,32 @@ export default function AddEventScreen() {
         </View>
 
         <View style={styles.row}>
-          <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.label}>날짜</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              value={formData.eventDate}
-              onChangeText={(text) =>
-                setFormData({ ...formData, eventDate: text })
-              }
-            />
-          </View>
-          <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.label}>시간</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="HH:MM"
-              value={formData.eventTime}
-              onChangeText={(text) =>
-                setFormData({ ...formData, eventTime: text })
-              }
-            />
-          </View>
+          {renderPickerField(
+            "date",
+            "날짜",
+            formData.eventDate,
+            "날짜 선택",
+            "calendar-outline",
+          )}
+          {renderPickerField(
+            "time",
+            "시간",
+            formData.eventTime,
+            "시간 선택",
+            "time-outline",
+          )}
         </View>
+
+        {visiblePicker && Platform.OS !== "web" && (
+          <DateTimePicker
+            value={getPickerDate(formData.eventDate, formData.eventTime)}
+            mode={visiblePicker}
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, selectedDate) =>
+              handleNativePickerChange(visiblePicker, event, selectedDate)
+            }
+          />
+        )}
 
         <View style={styles.field}>
           <Text style={styles.label}>목적지</Text>
@@ -257,7 +379,11 @@ export default function AddEventScreen() {
 
       {calculated && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <TouchableOpacity
+            style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
+            onPress={handleSave}
+            disabled={!isFormValid}
+          >
             <Ionicons
               name="checkmark"
               size={20}
@@ -329,6 +455,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: "#FFFFFF",
+  },
+  pickerButton: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: "#1a1a1a",
+  },
+  pickerButtonPlaceholder: {
+    color: "#8a8f98",
+  },
+  webPickerInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
+    fontSize: 16,
+    backgroundColor: "#FFFFFF",
+    color: "#1a1a1a",
+    width: "100%",
   },
   transportGrid: {
     flexDirection: "row",

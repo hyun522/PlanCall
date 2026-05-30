@@ -4,18 +4,20 @@ import { ko } from "date-fns/locale";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEvents } from "../contexts/EventContext";
+import { parseEventDate } from "../utils/dateValidation";
 
 export default function EventListScreen() {
   const { events } = useEvents();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const getTransportIcon = (method: string) => {
     switch (method) {
@@ -31,7 +33,7 @@ export default function EventListScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -45,7 +47,6 @@ export default function EventListScreen() {
           <Ionicons name="settings-outline" size={24} color="#1a1a1a" />
         </TouchableOpacity>
       </View>
-
       {/* Content */}
       <ScrollView
         style={styles.content}
@@ -62,9 +63,15 @@ export default function EventListScreen() {
         ) : (
           <View style={styles.eventList}>
             {events.map((event) => {
-              const eventDate = new Date(event.eventDate);
+              const eventDate = parseEventDate(event.eventDate);
               const isToday =
+                eventDate !== null &&
                 format(new Date(), "yyyy-MM-dd") === event.eventDate;
+              const eventDateLabel = eventDate
+                ? format(eventDate, "M월 d일 (EEE)", {
+                    locale: ko,
+                  })
+                : "날짜 확인 필요";
 
               return (
                 <TouchableOpacity
@@ -82,12 +89,7 @@ export default function EventListScreen() {
                           color="#6c757d"
                         />
                         <Text style={styles.eventDate}>
-                          {isToday
-                            ? "오늘"
-                            : format(eventDate, "M월 d일 (EEE)", {
-                                locale: ko,
-                              })}{" "}
-                          {event.eventTime}
+                          {isToday ? "오늘" : eventDateLabel} {event.eventTime}
                         </Text>
                       </View>
                     </View>
@@ -153,7 +155,6 @@ export default function EventListScreen() {
           </View>
         )}
       </ScrollView>
-
       {/* Add Button */}
       <TouchableOpacity
         style={styles.addButton}
@@ -161,7 +162,7 @@ export default function EventListScreen() {
       >
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -173,7 +174,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#FFFFFF",
     padding: 24,
-    paddingTop: 48,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",

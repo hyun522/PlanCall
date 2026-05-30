@@ -3,7 +3,7 @@ import React from "react";
 import { EventProvider, useEvents } from "../contexts/EventContext";
 
 function RootLayoutContent() {
-  const { settings } = useEvents();
+  const { settings, isLoaded } = useEvents();
 
   if (!settings.hasCompletedOnboarding) {
     return <Redirect href="/onboarding" />;

@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
-  SafeAreaView,
+  // SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,7 +22,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           {/* 로고 */}
@@ -85,7 +85,7 @@ export default function OnboardingScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
