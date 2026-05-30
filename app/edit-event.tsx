@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
+import { isValidEventDate } from "../utils/dateValidation";
 
 export default function EditEventScreen() {
   const { events, updateEvent, deleteEvent } = useEvents();
@@ -21,10 +22,10 @@ export default function EditEventScreen() {
   const event = events.find((e) => e.id === eventId);
 
   const [formData, setFormData] = useState({
-    eventName: event?.eventName || '',
-    eventDate: event?.eventDate || '',
-    eventTime: event?.eventTime || '',
-    location: event?.location || '',
+    eventName: event?.eventName || "",
+    eventDate: event?.eventDate || "",
+    eventTime: event?.eventTime || "",
+    location: event?.location || "",
   });
 
   if (!event) {
@@ -33,12 +34,23 @@ export default function EditEventScreen() {
   }
 
   const handleSave = () => {
+    if (!isFormValid) {
+      return;
+    }
+
     updateEvent(eventId as string, {
       ...event,
       ...formData,
     });
     router.back();
   };
+
+  const isFormValid = Boolean(
+    formData.eventName &&
+      isValidEventDate(formData.eventDate) &&
+      formData.eventTime &&
+      formData.location,
+  );
 
   const handleDelete = () => {
     deleteEvent(eventId as string);
@@ -77,6 +89,7 @@ export default function EditEventScreen() {
           <Text style={styles.label}>날짜</Text>
           <TextInput
             style={styles.input}
+            placeholder="YYYY-MM-DD"
             value={formData.eventDate}
             onChangeText={(text) =>
               setFormData({ ...formData, eventDate: text })
@@ -113,7 +126,11 @@ export default function EditEventScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <TouchableOpacity
+          style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
+          onPress={handleSave}
+          disabled={!isFormValid}
+        >
           <Text style={styles.saveButtonText}>저장하기</Text>
         </TouchableOpacity>
       </View>
@@ -192,6 +209,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   saveButtonText: {
     fontSize: 16,

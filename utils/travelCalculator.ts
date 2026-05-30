@@ -1,7 +1,7 @@
 export function calculateTravelTime(
   departureLocation: string,
   destination: string,
-  transportMethod: 'car' | 'transit' | 'walk'
+  transportMethod: "car" | "transit" | "walk",
 ): number {
   // Mock calculation based on transport method
   // In a real app, this would use Google Maps API or similar
@@ -21,28 +21,29 @@ export function calculateDepartureTime(
   eventTime: string,
   travelTimeMinutes: number,
   bufferMinutes: number,
-  extraMinutes: number
+  extraMinutes: number,
 ): string {
-  const [hours, minutes] = eventTime.split(':').map(Number);
+  const [hours, minutes] = eventTime.split(":").map(Number);
   const eventMinutes = hours * 60 + minutes;
-  const departureMinutes = eventMinutes - travelTimeMinutes - bufferMinutes - extraMinutes;
+  const departureMinutes =
+    eventMinutes - travelTimeMinutes - bufferMinutes - extraMinutes;
 
   const departureHours = Math.floor(departureMinutes / 60);
   const departureMins = departureMinutes % 60;
 
-  return `${String(departureHours).padStart(2, '0')}:${String(departureMins).padStart(2, '0')}`;
+  return `${String(departureHours).padStart(2, "0")}:${String(departureMins).padStart(2, "0")}`;
 }
 
 export function calculateArrivalTime(
   departureTime: string,
-  travelTimeMinutes: number
+  travelTimeMinutes: number,
 ): string {
-  const [hours, minutes] = departureTime.split(':').map(Number);
+  const [hours, minutes] = departureTime.split(":").map(Number);
   const departureMinutes = hours * 60 + minutes;
   const arrivalMinutes = departureMinutes + travelTimeMinutes;
 
   const arrivalHours = Math.floor(arrivalMinutes / 60) % 24;
   const arrivalMins = arrivalMinutes % 60;
 
-  return `${String(arrivalHours).padStart(2, '0')}:${String(arrivalMins).padStart(2, '0')}`;
+  return `${String(arrivalHours).padStart(2, "0")}:${String(arrivalMins).padStart(2, "0")}`;
 }

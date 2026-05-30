@@ -1,4 +1,4 @@
-export type TransportMethod = 'car' | 'transit' | 'walk';
+export type TransportMethod = "car" | "transit" | "walk";
 
 export interface Event {
   id: string;
@@ -25,6 +25,7 @@ export interface Settings {
 export interface EventContextType {
   events: Event[];
   settings: Settings;
+  isLoaded: boolean;
   addEvent: (event: Event) => void;
   updateEvent: (id: string, event: Event) => void;
   deleteEvent: (id: string) => void;

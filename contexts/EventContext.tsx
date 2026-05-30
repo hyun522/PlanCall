@@ -1,12 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Event, Settings, EventContextType } from '../types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { Event, EventContextType, Settings } from "../types";
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 const DEFAULT_SETTINGS: Settings = {
   hasCompletedOnboarding: false,
-  defaultDepartureLocation: '',
+  defaultDepartureLocation: "",
   arrivalBuffer: 60,
   extraTime: 15,
   departureNotification: true,
@@ -33,8 +39,8 @@ export function EventProvider({ children }: { children: ReactNode }) {
   const loadData = async () => {
     try {
       const [eventsData, settingsData] = await Promise.all([
-        AsyncStorage.getItem('events'),
-        AsyncStorage.getItem('settings'),
+        AsyncStorage.getItem("events"),
+        AsyncStorage.getItem("settings"),
       ]);
 
       if (eventsData) {
@@ -45,7 +51,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
       }
       setIsLoaded(true);
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error("Failed to load data:", error);
       setIsLoaded(true);
     }
   };
@@ -53,11 +59,11 @@ export function EventProvider({ children }: { children: ReactNode }) {
   const saveData = async () => {
     try {
       await Promise.all([
-        AsyncStorage.setItem('events', JSON.stringify(events)),
-        AsyncStorage.setItem('settings', JSON.stringify(settings)),
+        AsyncStorage.setItem("events", JSON.stringify(events)),
+        AsyncStorage.setItem("settings", JSON.stringify(settings)),
       ]);
     } catch (error) {
-      console.error('Failed to save data:', error);
+      console.error("Failed to save data:", error);
     }
   };
 
@@ -67,7 +73,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
 
   const updateEvent = (id: string, updatedEvent: Event) => {
     setEvents((prev) =>
-      prev.map((event) => (event.id === id ? updatedEvent : event))
+      prev.map((event) => (event.id === id ? updatedEvent : event)),
     );
   };
 
@@ -84,6 +90,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
       value={{
         events,
         settings,
+        isLoaded,
         addEvent,
         updateEvent,
         deleteEvent,
@@ -98,7 +105,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
 export function useEvents() {
   const context = useContext(EventContext);
   if (!context) {
-    throw new Error('useEvents must be used within EventProvider');
+    throw new Error("useEvents must be used within EventProvider");
   }
   return context;
 }
