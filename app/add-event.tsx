@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -23,6 +24,17 @@ import {
 } from "../utils/travelCalculator";
 
 type PickerMode = "date" | "time";
+type MockTransitRoute = {
+  id: string;
+  durationMinutes: number;
+  summary: string;
+};
+
+const MOCK_TRANSIT_ROUTES: MockTransitRoute[] = [
+  { id: "subway-2-9", durationMinutes: 43, summary: "2호선 -> 9호선" },
+  { id: "bus", durationMinutes: 48, summary: "버스" },
+  { id: "subway-2-1", durationMinutes: 52, summary: "2호선 -> 1호선" },
+];
 
 const padTwoDigits = (value: number) => value.toString().padStart(2, "0");
 
@@ -65,8 +77,10 @@ export default function AddEventScreen() {
     travelTime: number;
     departureTime: string;
     arrivalTime: string;
+    transitRouteSummary?: string;
   } | null>(null);
   const [visiblePicker, setVisiblePicker] = useState<PickerMode | null>(null);
+  const [isTransitModalVisible, setIsTransitModalVisible] = useState(false);
 
   const updateScheduleDateTime = (mode: PickerMode, date: Date) => {
     setCalculated(null);
@@ -154,22 +168,10 @@ export default function AddEventScreen() {
     );
   };
 
-  const handleCalculate = () => {
-    if (
-      !formData.departureLocation ||
-      !formData.location ||
-      !isValidEventDate(formData.eventDate) ||
-      !formData.eventTime
-    ) {
-      return;
-    }
-
-    const travelTime = calculateTravelTime(
-      formData.departureLocation,
-      formData.location,
-      formData.transportMethod,
-    );
-
+  const calculateSchedule = (
+    travelTime: number,
+    transitRouteSummary?: string,
+  ) => {
     const departureTime = calculateDepartureTime(
       formData.eventTime,
       travelTime,
@@ -183,7 +185,37 @@ export default function AddEventScreen() {
       travelTime,
       departureTime,
       arrivalTime,
+      transitRouteSummary,
     });
+  };
+
+  const handleCalculate = () => {
+    if (
+      !formData.departureLocation ||
+      !formData.location ||
+      !isValidEventDate(formData.eventDate) ||
+      !formData.eventTime
+    ) {
+      return;
+    }
+
+    if (formData.transportMethod === "transit") {
+      setIsTransitModalVisible(true);
+      return;
+    }
+
+    const travelTime = calculateTravelTime(
+      formData.departureLocation,
+      formData.location,
+      formData.transportMethod,
+    );
+
+    calculateSchedule(travelTime);
+  };
+
+  const handleSelectTransitRoute = (route: MockTransitRoute) => {
+    setIsTransitModalVisible(false);
+    calculateSchedule(route.durationMinutes, route.summary);
   };
 
   const handleSave = () => {
@@ -205,6 +237,7 @@ export default function AddEventScreen() {
       departureLocation: formData.departureLocation,
       transportMethod: formData.transportMethod,
       travelTimeMinutes: calculated.travelTime,
+      // TODO: Add selectedRouteSummary when the Event model is updated.
       departureTime: calculated.departureTime,
       arrivalTime: calculated.arrivalTime,
     };
@@ -320,9 +353,14 @@ export default function AddEventScreen() {
                   formData.transportMethod === value &&
                     styles.transportButtonActive,
                 ]}
-                onPress={() =>
-                  setFormData({ ...formData, transportMethod: value as any })
-                }
+                onPress={() => {
+                  setCalculated(null);
+                  setIsTransitModalVisible(false);
+                  setFormData((current) => ({
+                    ...current,
+                    transportMethod: value as any,
+                  }));
+                }}
               >
                 <Ionicons
                   name={icon as any}
@@ -353,12 +391,24 @@ export default function AddEventScreen() {
           onPress={handleCalculate}
           disabled={!isFormValid}
         >
-          <Text style={styles.calculateButtonText}>시간 계산하기</Text>
+          <Text style={styles.calculateButtonText}>
+            {formData.transportMethod === "transit"
+              ? "경로 선택하기"
+              : "시간 계산하기"}
+          </Text>
         </TouchableOpacity>
 
         {calculated && (
           <View style={styles.resultCard}>
             <Text style={styles.resultTitle}>계산 결과</Text>
+            {calculated.transitRouteSummary && (
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>선택 경로</Text>
+                <Text style={styles.resultValue}>
+                  {calculated.transitRouteSummary}
+                </Text>
+              </View>
+            )}
             <View style={styles.resultRow}>
               <Text style={styles.resultLabel}>예상 소요 시간</Text>
               <Text style={styles.resultValue}>{calculated.travelTime}분</Text>
@@ -397,6 +447,43 @@ export default function AddEventScreen() {
           </Text>
         </View>
       )}
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={isTransitModalVisible}
+        onRequestClose={() => setIsTransitModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>대중교통 경로 선택</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setIsTransitModalVisible(false)}
+              >
+                <Ionicons name="close" size={22} color="#1a1a1a" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.routeList}>
+              {MOCK_TRANSIT_ROUTES.map((route) => (
+                <TouchableOpacity
+                  key={route.id}
+                  style={styles.routeOption}
+                  activeOpacity={0.8}
+                  onPress={() => handleSelectTransitRoute(route)}
+                >
+                  <Text style={styles.routeDuration}>
+                    {route.durationMinutes}분
+                  </Text>
+                  <Text style={styles.routeSummary}>{route.summary}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -590,5 +677,55 @@ const styles = StyleSheet.create({
     color: "#6c757d",
     textAlign: "center",
     marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 16,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f3f4f6",
+  },
+  routeList: {
+    gap: 12,
+  },
+  routeOption: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    gap: 6,
+  },
+  routeDuration: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#4a9d6f",
+  },
+  routeSummary: {
+    fontSize: 15,
+    color: "#1a1a1a",
   },
 });
