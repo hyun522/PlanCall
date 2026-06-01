@@ -15,7 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import SearchLocationModal from "../components/SearchLocationModal";
 import { useEvents } from "../contexts/EventContext";
+import { LocationSearchTarget, SelectedPlace } from "../types";
 import { isValidEventDate } from "../utils/dateValidation";
 import {
   calculateArrivalTime,
@@ -69,7 +71,9 @@ export default function AddEventScreen() {
     eventDate: "",
     eventTime: "",
     location: "",
-    departureLocation: settings.defaultDepartureLocation,
+    locationPlace: null as SelectedPlace | null,
+    departureLocation: "",
+    departurePlace: null as SelectedPlace | null,
     transportMethod: "transit" as "car" | "transit" | "walk",
   });
 
@@ -81,6 +85,8 @@ export default function AddEventScreen() {
   } | null>(null);
   const [visiblePicker, setVisiblePicker] = useState<PickerMode | null>(null);
   const [isTransitModalVisible, setIsTransitModalVisible] = useState(false);
+  const [locationModalTarget, setLocationModalTarget] =
+    useState<LocationSearchTarget | null>(null);
 
   const updateScheduleDateTime = (mode: PickerMode, date: Date) => {
     setCalculated(null);
@@ -193,6 +199,8 @@ export default function AddEventScreen() {
     if (
       !formData.departureLocation ||
       !formData.location ||
+      !formData.departurePlace ||
+      !formData.locationPlace ||
       !isValidEventDate(formData.eventDate) ||
       !formData.eventTime
     ) {
@@ -218,6 +226,30 @@ export default function AddEventScreen() {
     calculateSchedule(route.durationMinutes, route.summary);
   };
 
+  const handleSelectPlace = (place: SelectedPlace) => {
+    if (!locationModalTarget) {
+      return;
+    }
+
+    setCalculated(null);
+    setFormData((current) => {
+      if (locationModalTarget === "destination") {
+        return {
+          ...current,
+          location: place.name,
+          locationPlace: place,
+        };
+      }
+
+      return {
+        ...current,
+        departureLocation: place.name,
+        departurePlace: place,
+      };
+    });
+    setLocationModalTarget(null);
+  };
+
   const handleSave = () => {
     if (
       !calculated ||
@@ -235,6 +267,8 @@ export default function AddEventScreen() {
       eventTime: formData.eventTime,
       location: formData.location,
       departureLocation: formData.departureLocation,
+      locationPlace: formData.locationPlace ?? undefined,
+      departurePlace: formData.departurePlace ?? undefined,
       transportMethod: formData.transportMethod,
       travelTimeMinutes: calculated.travelTime,
       // TODO: Add selectedRouteSummary when the Event model is updated.
@@ -251,7 +285,9 @@ export default function AddEventScreen() {
     isValidEventDate(formData.eventDate) &&
     formData.eventTime &&
     formData.location &&
-    formData.departureLocation,
+    formData.departureLocation &&
+    formData.locationPlace &&
+    formData.departurePlace,
   );
 
   return (
@@ -315,26 +351,40 @@ export default function AddEventScreen() {
 
         <View style={styles.field}>
           <Text style={styles.label}>목적지</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="행사 장소 입력"
-            value={formData.location}
-            onChangeText={(text) =>
-              setFormData({ ...formData, location: text })
-            }
-          />
+          <TouchableOpacity
+            style={styles.searchField}
+            activeOpacity={0.8}
+            onPress={() => setLocationModalTarget("destination")}
+          >
+            <Text
+              style={[
+                styles.searchFieldText,
+                !formData.location && styles.searchFieldPlaceholder,
+              ]}
+            >
+              {formData.location || "행사 장소 입력"}
+            </Text>
+            <Ionicons name="search" size={20} color="#4a9d6f" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.field}>
           <Text style={styles.label}>출발지</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="출발 위치 입력"
-            value={formData.departureLocation}
-            onChangeText={(text) =>
-              setFormData({ ...formData, departureLocation: text })
-            }
-          />
+          <TouchableOpacity
+            style={styles.searchField}
+            activeOpacity={0.8}
+            onPress={() => setLocationModalTarget("departure")}
+          >
+            <Text
+              style={[
+                styles.searchFieldText,
+                !formData.departureLocation && styles.searchFieldPlaceholder,
+              ]}
+            >
+              {formData.departureLocation || "출발 위치 입력"}
+            </Text>
+            <Ionicons name="search" size={20} color="#4a9d6f" />
+          </TouchableOpacity>
         </View>
 
         {/* Transport Methods */}
@@ -484,6 +534,13 @@ export default function AddEventScreen() {
           </View>
         </View>
       </Modal>
+
+      <SearchLocationModal
+        visible={locationModalTarget !== null}
+        target={locationModalTarget ?? "destination"}
+        onClose={() => setLocationModalTarget(null)}
+        onSelectPlace={handleSelectPlace}
+      />
     </SafeAreaView>
   );
 }
@@ -572,6 +629,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     color: "#1a1a1a",
     width: "100%",
+  },
+  searchField: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  searchFieldText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1a1a1a",
+  },
+  searchFieldPlaceholder: {
+    color: "#8a8f98",
   },
   transportGrid: {
     flexDirection: "row",
