@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS: Settings = {
 export function EventProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [pendingLocationSelection, setPendingLocationSelectionState] =
+    useState<EventContextType["pendingLocationSelection"]>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load data from AsyncStorage
@@ -85,6 +87,15 @@ export function EventProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const setPendingLocationSelection: EventContextType["setPendingLocationSelection"] =
+    (selection) => {
+      setPendingLocationSelectionState(selection);
+    };
+
+  const clearPendingLocationSelection = () => {
+    setPendingLocationSelectionState(null);
+  };
+
   return (
     <EventContext.Provider
       value={{
@@ -95,6 +106,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
         updateEvent,
         deleteEvent,
         updateSettings,
+        pendingLocationSelection,
+        setPendingLocationSelection,
+        clearPendingLocationSelection,
       }}
     >
       {children}
