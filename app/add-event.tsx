@@ -1,7 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -121,6 +121,19 @@ export default function AddEventScreen() {
     iconName: keyof typeof Ionicons.glyphMap,
   ) => {
     if (Platform.OS === "web") {
+      const webPickerInputStyle = {
+        ...(StyleSheet.flatten([
+          styles.webPickerInput,
+          !value && styles.webPickerInputPlaceholder,
+        ]) as React.CSSProperties),
+        appearance: "none",
+        WebkitAppearance: "none",
+        borderStyle: "solid",
+        boxSizing: "border-box",
+        fontFamily: "inherit",
+        outline: "none",
+      };
+
       return (
         <View style={[styles.field, { flex: 1 }]}>
           <Text style={styles.label}>{label}</Text>
@@ -145,7 +158,7 @@ export default function AddEventScreen() {
             onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => {
               event.preventDefault();
             },
-            style: styles.webPickerInput,
+            style: webPickerInputStyle,
             "aria-label": label,
           })}
         </View>
@@ -313,7 +326,7 @@ export default function AddEventScreen() {
           <Text style={styles.label}>일정 이름</Text>
           <TextInput
             style={styles.input}
-            placeholder="예: 친구 결혼식"
+            placeholder="예: 길동과 점심만찬"
             value={formData.eventName}
             onChangeText={(text) =>
               setFormData({ ...formData, eventName: text })
@@ -620,15 +633,19 @@ const styles = StyleSheet.create({
   },
   webPickerInput: {
     height: 48,
+    width: "100%",
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingLeft: 16,
     paddingRight: 16,
     fontSize: 16,
+    lineHeight: 20,
     backgroundColor: "#FFFFFF",
     color: "#1a1a1a",
-    width: "100%",
+  },
+  webPickerInputPlaceholder: {
+    color: "#8a8f98",
   },
   searchField: {
     height: 48,
