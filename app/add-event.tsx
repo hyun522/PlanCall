@@ -326,6 +326,7 @@ export default function AddEventScreen() {
           <Text style={styles.label}>일정 이름</Text>
           <TextInput
             style={styles.input}
+            placeholderTextColor="#8a8f98"
             placeholder="예: 길동과 점심만찬"
             value={formData.eventName}
             onChangeText={(text) =>
