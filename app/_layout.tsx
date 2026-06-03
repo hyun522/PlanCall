@@ -1,11 +1,18 @@
-import { Redirect, Slot } from "expo-router";
+import { Redirect, Slot, useSegments } from "expo-router";
 import React from "react";
 import { EventProvider, useEvents } from "../contexts/EventContext";
 
 function RootLayoutContent() {
   const { settings, isLoaded } = useEvents();
+  const segments = useSegments();
 
-  if (!settings.hasCompletedOnboarding) {
+  if (!isLoaded) {
+    return null;
+  }
+
+  const isOnboardingRoute = segments[0] === "onboarding";
+
+  if (!settings.hasCompletedOnboarding && !isOnboardingRoute) {
     return <Redirect href="/onboarding" />;
   }
 

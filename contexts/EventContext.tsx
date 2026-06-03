@@ -2,8 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { Event, EventContextType, Settings } from "../types";
@@ -26,19 +28,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
     useState<EventContextType["pendingLocationSelection"]>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load data from AsyncStorage
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Save data to AsyncStorage whenever it changes
-  useEffect(() => {
-    if (isLoaded) {
-      saveData();
-    }
-  }, [events, settings, isLoaded]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [eventsData, settingsData] = await Promise.all([
         AsyncStorage.getItem("events"),
@@ -56,9 +46,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
       console.error("Failed to load data:", error);
       setIsLoaded(true);
     }
-  };
+  }, []);
 
-  const saveData = async () => {
+  const saveData = useCallback(async () => {
     try {
       await Promise.all([
         AsyncStorage.setItem("events", JSON.stringify(events)),
@@ -67,50 +57,76 @@ export function EventProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to save data:", error);
     }
-  };
+  }, [events, settings]);
 
-  const addEvent = (event: Event) => {
+  // Load data from AsyncStorage
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Save data to AsyncStorage whenever it changes
+  useEffect(() => {
+    if (isLoaded) {
+      saveData();
+    }
+  }, [isLoaded, saveData]);
+
+  const addEvent = useCallback((event: Event) => {
     setEvents((prev) => [...prev, event]);
-  };
+  }, []);
 
-  const updateEvent = (id: string, updatedEvent: Event) => {
+  const updateEvent = useCallback((id: string, updatedEvent: Event) => {
     setEvents((prev) =>
       prev.map((event) => (event.id === id ? updatedEvent : event)),
     );
-  };
+  }, []);
 
-  const deleteEvent = (id: string) => {
+  const deleteEvent = useCallback((id: string) => {
     setEvents((prev) => prev.filter((event) => event.id !== id));
-  };
+  }, []);
 
-  const updateSettings = (newSettings: Partial<Settings>) => {
+  const updateSettings = useCallback((newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  }, []);
 
   const setPendingLocationSelection: EventContextType["setPendingLocationSelection"] =
-    (selection) => {
+    useCallback((selection) => {
       setPendingLocationSelectionState(selection);
-    };
+    }, []);
 
-  const clearPendingLocationSelection = () => {
+  const clearPendingLocationSelection = useCallback(() => {
     setPendingLocationSelectionState(null);
-  };
+  }, []);
+
+  const value = useMemo<EventContextType>(
+    () => ({
+      events,
+      settings,
+      isLoaded,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      updateSettings,
+      pendingLocationSelection,
+      setPendingLocationSelection,
+      clearPendingLocationSelection,
+    }),
+    [
+      events,
+      settings,
+      isLoaded,
+      addEvent,
+      updateEvent,
+      deleteEvent,
+      updateSettings,
+      pendingLocationSelection,
+      setPendingLocationSelection,
+      clearPendingLocationSelection,
+    ],
+  );
 
   return (
-    <EventContext.Provider
-      value={{
-        events,
-        settings,
-        isLoaded,
-        addEvent,
-        updateEvent,
-        deleteEvent,
-        updateSettings,
-        pendingLocationSelection,
-        setPendingLocationSelection,
-        clearPendingLocationSelection,
-      }}
-    >
+    <EventContext.Provider value={value}>
       {children}
     </EventContext.Provider>
   );
