@@ -1,4 +1,4 @@
-export type TransportMethod = "car" | "transit" | "walk";
+export type TransportMethod = "car" | "transit";
 
 export type LocationSearchTarget = "destination" | "departure";
 

@@ -17,7 +17,11 @@ import {
 } from "react-native";
 import SearchLocationModal from "../components/SearchLocationModal";
 import { useEvents } from "../contexts/EventContext";
-import { LocationSearchTarget, SelectedPlace } from "../types";
+import {
+  LocationSearchTarget,
+  SelectedPlace,
+  TransportMethod,
+} from "../types";
 import { isValidEventDate } from "../utils/dateValidation";
 import {
   calculateArrivalTime,
@@ -31,11 +35,20 @@ type MockTransitRoute = {
   durationMinutes: number;
   summary: string;
 };
+type TransportOption = {
+  value: TransportMethod;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+};
 
 const MOCK_TRANSIT_ROUTES: MockTransitRoute[] = [
   { id: "subway-2-9", durationMinutes: 43, summary: "2호선 -> 9호선" },
   { id: "bus", durationMinutes: 48, summary: "버스" },
   { id: "subway-2-1", durationMinutes: 52, summary: "2호선 -> 1호선" },
+];
+const TRANSPORT_OPTIONS: TransportOption[] = [
+  { value: "car", icon: "car", label: "자차" },
+  { value: "transit", icon: "bus", label: "대중교통" },
 ];
 
 const padTwoDigits = (value: number) => value.toString().padStart(2, "0");
@@ -74,7 +87,7 @@ export default function AddEventScreen() {
     locationPlace: null as SelectedPlace | null,
     departureLocation: "",
     departurePlace: null as SelectedPlace | null,
-    transportMethod: "transit" as "car" | "transit" | "walk",
+    transportMethod: "transit" as TransportMethod,
   });
 
   const [calculated, setCalculated] = useState<{
@@ -405,11 +418,7 @@ export default function AddEventScreen() {
         <View style={styles.field}>
           <Text style={styles.label}>이동 수단</Text>
           <View style={styles.transportGrid}>
-            {[
-              { value: "car", icon: "car", label: "자차" },
-              { value: "transit", icon: "bus", label: "대중교통" },
-              { value: "walk", icon: "walk", label: "도보" },
-            ].map(({ value, icon, label }) => (
+            {TRANSPORT_OPTIONS.map(({ value, icon, label }) => (
               <TouchableOpacity
                 key={value}
                 style={[
@@ -422,12 +431,12 @@ export default function AddEventScreen() {
                   setIsTransitModalVisible(false);
                   setFormData((current) => ({
                     ...current,
-                    transportMethod: value as any,
+                    transportMethod: value,
                   }));
                 }}
               >
                 <Ionicons
-                  name={icon as any}
+                  name={icon}
                   size={24}
                   color={
                     formData.transportMethod === value ? "#FFFFFF" : "#4a9d6f"

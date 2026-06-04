@@ -1,7 +1,9 @@
+import { TransportMethod } from "../types";
+
 export function calculateTravelTime(
   departureLocation: string,
   destination: string,
-  transportMethod: "car" | "transit" | "walk",
+  transportMethod: TransportMethod,
 ): number {
   // Mock calculation based on transport method
   // In a real app, this would use Google Maps API or similar
@@ -11,7 +13,6 @@ export function calculateTravelTime(
   const multipliers = {
     car: 1.0,
     transit: 1.5,
-    walk: 3.0,
   };
 
   return Math.round(baseTime * multipliers[transportMethod]);

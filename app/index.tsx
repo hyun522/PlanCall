@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEvents } from "../contexts/EventContext";
+import { TransportMethod } from "../types";
 import { parseEventDate } from "../utils/dateValidation";
 
 export default function EventListScreen() {
@@ -19,14 +20,12 @@ export default function EventListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const getTransportIcon = (method: string) => {
+  const getTransportIcon = (method: TransportMethod) => {
     switch (method) {
       case "car":
         return "car";
       case "transit":
         return "bus";
-      case "walk":
-        return "walk";
       default:
         return "car";
     }
