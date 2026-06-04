@@ -2,6 +2,7 @@
 
 const { defineConfig, globalIgnores } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
+const globals = require("globals");
 // const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended"); //prettier를 eslint 안에서 실행시키겠다
 // “eslint는 검사만 / prettier는 저장 시 실행”
 
