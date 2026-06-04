@@ -16,7 +16,7 @@ function RootLayoutContent() {
     return <Redirect href="/onboarding" />;
   }
 
-  return <Slot />;
+  return <Slot />; //현재경로 화면 보여줌
 }
 
 export default function RootLayout() {

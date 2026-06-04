@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -12,10 +13,12 @@ import {
 import { useEvents } from "../contexts/EventContext";
 
 export default function OnboardingScreen() {
+  const router = useRouter();
   const { updateSettings } = useEvents();
 
   const handleStart = () => {
     updateSettings({ hasCompletedOnboarding: true });
+    router.replace("/");
   };
 
   return (
