@@ -2,21 +2,27 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
 
+type MinuteSettingField = "arrivalBuffer" | "extraTime";
+
+const MINUTE_OPTIONS = Array.from({ length: 25 }, (_, index) => index * 5);
+
 export default function SettingsScreen() {
   const { settings, updateSettings } = useEvents();
   const router = useRouter();
+  const [selectedMinuteField, setSelectedMinuteField] =
+    useState<MinuteSettingField | null>(null);
 
   const [formData, setFormData] = useState({
     arrivalBuffer: settings.arrivalBuffer,
@@ -30,6 +36,29 @@ export default function SettingsScreen() {
     updateSettings(formData);
     router.back();
   };
+
+  const handleSelectMinute = (value: number) => {
+    if (!selectedMinuteField) {
+      return;
+    }
+
+    setFormData((current) => ({
+      ...current,
+      [selectedMinuteField]: value,
+    }));
+    setSelectedMinuteField(null);
+  };
+
+  const renderMinuteSelector = (field: MinuteSettingField, value: number) => (
+    <TouchableOpacity
+      style={[styles.minuteSelectButton, { flex: 1 }]}
+      activeOpacity={0.8}
+      onPress={() => setSelectedMinuteField(field)}
+    >
+      <Text style={styles.minuteSelectText}>{value}</Text>
+      <Ionicons name="chevron-down" size={20} color="#4a9d6f" />
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -58,14 +87,7 @@ export default function SettingsScreen() {
             집을 나가기 전 준비에 필요한 시간(분)
           </Text>
           <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              keyboardType="number-pad"
-              value={String(formData.arrivalBuffer)}
-              onChangeText={(text) =>
-                setFormData({ ...formData, arrivalBuffer: parseInt(text) || 0 })
-              }
-            />
+            {renderMinuteSelector("arrivalBuffer", formData.arrivalBuffer)}
             <Text style={styles.unit}>분</Text>
           </View>
         </View>
@@ -80,14 +102,7 @@ export default function SettingsScreen() {
             예상치 못한 상황을 대비해 추가로 확보할 시간(분)
           </Text>
           <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              keyboardType="number-pad"
-              value={String(formData.extraTime)}
-              onChangeText={(text) =>
-                setFormData({ ...formData, extraTime: parseInt(text) || 0 })
-              }
-            />
+            {renderMinuteSelector("extraTime", formData.extraTime)}
             <Text style={styles.unit}>분</Text>
           </View>
         </View>
@@ -143,6 +158,54 @@ export default function SettingsScreen() {
           <Text style={styles.saveButtonText}>저장하기</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={selectedMinuteField !== null}
+        onRequestClose={() => setSelectedMinuteField(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>시간 선택</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setSelectedMinuteField(null)}
+              >
+                <Ionicons name="close" size={22} color="#1a1a1a" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.minuteOptionList}>
+              {MINUTE_OPTIONS.map((value) => (
+                <TouchableOpacity
+                  key={value}
+                  style={[
+                    styles.minuteOption,
+                    selectedMinuteField &&
+                      formData[selectedMinuteField] === value &&
+                      styles.minuteOptionActive,
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => handleSelectMinute(value)}
+                >
+                  <Text
+                    style={[
+                      styles.minuteOptionText,
+                      selectedMinuteField &&
+                        formData[selectedMinuteField] === value &&
+                        styles.minuteOptionTextActive,
+                    ]}
+                  >
+                    {value}분
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -193,14 +256,20 @@ const styles = StyleSheet.create({
     color: "#6c757d",
     marginBottom: 16,
   },
-  input: {
+  minuteSelectButton: {
     height: 48,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     borderRadius: 8,
     paddingHorizontal: 16,
-    fontSize: 16,
     backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  minuteSelectText: {
+    fontSize: 16,
+    color: "#1a1a1a",
   },
   inputRow: {
     flexDirection: "row",
@@ -247,5 +316,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    maxHeight: "70%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  minuteOptionList: {
+    marginHorizontal: -8,
+  },
+  minuteOption: {
+    height: 48,
+    borderRadius: 8,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  minuteOptionActive: {
+    backgroundColor: "#e8f5ed",
+  },
+  minuteOptionText: {
+    fontSize: 16,
+    color: "#1a1a1a",
+  },
+  minuteOptionTextActive: {
+    color: "#4a9d6f",
+    fontWeight: "600",
   },
 });

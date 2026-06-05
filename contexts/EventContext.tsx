@@ -43,8 +43,8 @@ const MOCK_EVENTS: Event[] = [
 const DEFAULT_SETTINGS: Settings = {
   hasCompletedOnboarding: false,
   defaultDepartureLocation: "",
-  arrivalBuffer: 60,
-  extraTime: 15,
+  arrivalBuffer: 0,
+  extraTime: 0,
   departureNotification: true,
   arrivalNotification: false,
 };
