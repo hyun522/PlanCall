@@ -12,6 +12,34 @@ import { Event, EventContextType, Settings } from "../types";
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
+// TODO: 카카오 API 연동 후 삭제할 Mock Event 데이터
+const MOCK_EVENTS: Event[] = [
+  {
+    id: "mock-event-1",
+    eventName: "강남 미팅",
+    eventDate: "2026-06-10",
+    eventTime: "14:00",
+    location: "강남역",
+    departureLocation: "서울역",
+    transportMethod: "transit",
+    travelTimeMinutes: 35,
+    departureTime: "13:10",
+    arrivalTime: "13:45",
+  },
+  {
+    id: "mock-event-2",
+    eventName: "친구 결혼식",
+    eventDate: "2026-06-13",
+    eventTime: "12:30",
+    location: "잠실 롯데호텔",
+    departureLocation: "서울역",
+    transportMethod: "car",
+    travelTimeMinutes: 40,
+    departureTime: "11:35",
+    arrivalTime: "12:15",
+  },
+];
+
 const DEFAULT_SETTINGS: Settings = {
   hasCompletedOnboarding: false,
   defaultDepartureLocation: "",
@@ -22,7 +50,7 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 export function EventProvider({ children }: { children: ReactNode }) {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>(MOCK_EVENTS);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [pendingLocationSelection, setPendingLocationSelectionState] =
     useState<EventContextType["pendingLocationSelection"]>(null);
@@ -63,6 +91,18 @@ export function EventProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    AsyncStorage.getAllKeys().then(async (keys) => {
+      const values = await AsyncStorage.multiGet(keys);
+
+      console.log(values);
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.clear();
+  }, []);
 
   // Save data to AsyncStorage whenever it changes
   useEffect(() => {
@@ -126,9 +166,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <EventContext.Provider value={value}>
-      {children}
-    </EventContext.Provider>
+    <EventContext.Provider value={value}>{children}</EventContext.Provider>
   );
 }
 
