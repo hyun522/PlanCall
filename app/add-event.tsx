@@ -274,7 +274,7 @@ export default function AddEventScreen() {
 
   const handleSave = () => {
     if (
-      // !calculated ||
+      !calculated ||
       !formData.eventName ||
       !isValidEventDate(formData.eventDate) ||
       !formData.eventTime
@@ -302,20 +302,14 @@ export default function AddEventScreen() {
     router.back();
   };
 
-  // const isFormValid = Boolean(
-  //   formData.eventName &&
-  //   isValidEventDate(formData.eventDate) &&
-  //   formData.eventTime &&
-  //   formData.location &&
-  //   formData.departureLocation &&
-  //   formData.locationPlace &&
-  //   formData.departurePlace,
-  // );
-
   const isFormValid = Boolean(
     formData.eventName &&
     isValidEventDate(formData.eventDate) &&
-    formData.eventTime,
+    formData.eventTime &&
+    formData.location &&
+    formData.departureLocation &&
+    formData.locationPlace &&
+    formData.departurePlace,
   );
 
   return (
@@ -379,25 +373,6 @@ export default function AddEventScreen() {
         )}
 
         <View style={styles.field}>
-          <Text style={styles.label}>목적지</Text>
-          <TouchableOpacity
-            style={styles.searchField}
-            activeOpacity={0.8}
-            onPress={() => setLocationModalTarget("destination")}
-          >
-            <Text
-              style={[
-                styles.searchFieldText,
-                !formData.location && styles.searchFieldPlaceholder,
-              ]}
-            >
-              {formData.location || "행사 장소 입력"}
-            </Text>
-            <Ionicons name="search" size={20} color="#4a9d6f" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.field}>
           <Text style={styles.label}>출발지</Text>
           <TouchableOpacity
             style={styles.searchField}
@@ -411,6 +386,25 @@ export default function AddEventScreen() {
               ]}
             >
               {formData.departureLocation || "출발 위치 입력"}
+            </Text>
+            <Ionicons name="search" size={20} color="#4a9d6f" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>목적지</Text>
+          <TouchableOpacity
+            style={styles.searchField}
+            activeOpacity={0.8}
+            onPress={() => setLocationModalTarget("destination")}
+          >
+            <Text
+              style={[
+                styles.searchFieldText,
+                !formData.location && styles.searchFieldPlaceholder,
+              ]}
+            >
+              {formData.location || "행사 장소 입력"}
             </Text>
             <Ionicons name="search" size={20} color="#4a9d6f" />
           </TouchableOpacity>
