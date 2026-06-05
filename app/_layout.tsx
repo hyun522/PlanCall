@@ -1,5 +1,6 @@
 import { Redirect, Slot, useSegments } from "expo-router";
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { EventProvider, useEvents } from "../contexts/EventContext";
 
 function RootLayoutContent() {
@@ -21,8 +22,10 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <EventProvider>
-      <RootLayoutContent />
-    </EventProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <EventProvider>
+        <RootLayoutContent />
+      </EventProvider>
+    </GestureHandlerRootView>
   );
 }

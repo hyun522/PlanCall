@@ -4,19 +4,21 @@ import { ko } from "date-fns/locale";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEvents } from "../contexts/EventContext";
-import { TransportMethod } from "../types";
+import { Event, TransportMethod } from "../types";
 import { parseEventDate } from "../utils/dateValidation";
 
 export default function EventListScreen() {
-  const { events } = useEvents();
+  const { events, deleteEvent } = useEvents();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -30,6 +32,27 @@ export default function EventListScreen() {
         return "car";
     }
   };
+
+  const confirmDeleteEvent = (event: Event) => {
+    Alert.alert("일정 삭제", "정말 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: () => deleteEvent(event.id),
+      },
+    ]);
+  };
+
+  const renderDeleteAction = (event: Event) => (
+    <TouchableOpacity
+      style={styles.deleteAction}
+      onPress={() => confirmDeleteEvent(event)}
+    >
+      <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
+      <Text style={styles.deleteActionText}>삭제</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -73,82 +96,92 @@ export default function EventListScreen() {
                 : "날짜 확인 필요";
 
               return (
-                <TouchableOpacity
+                <Swipeable
                   key={event.id}
-                  style={styles.eventCard}
-                  onPress={() => router.push(`/edit-event?eventId=${event.id}`)}
+                  renderRightActions={() => renderDeleteAction(event)}
                 >
-                  <View style={styles.eventHeader}>
-                    <View style={styles.eventTitleContainer}>
-                      <Text style={styles.eventName}>{event.eventName}</Text>
-                      <View style={styles.eventDateRow}>
+                  {/* TODO: MVP 범위 조정으로 일정 수정 기능 임시 비활성화 */}
+                  {/* <TouchableOpacity
+                    style={styles.eventCard}
+                    onPress={() =>
+                      router.push(`/edit-event?eventId=${event.id}`)
+                    }
+                  > */}
+                  <View style={styles.eventCard}>
+                    <View style={styles.eventHeader}>
+                      <View style={styles.eventTitleContainer}>
+                        <Text style={styles.eventName}>{event.eventName}</Text>
+                        <View style={styles.eventDateRow}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={16}
+                            color="#6c757d"
+                          />
+                          <Text style={styles.eventDate}>
+                            {isToday ? "오늘" : eventDateLabel}{" "}
+                            {event.eventTime}
+                          </Text>
+                        </View>
+                      </View>
+                      {isToday && (
+                        <View style={styles.dDayBadge}>
+                          <Text style={styles.dDayText}>D-Day</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.eventDetails}>
+                      <View style={styles.detailRow}>
                         <Ionicons
-                          name="calendar-outline"
+                          name="location-outline"
                           size={16}
                           color="#6c757d"
                         />
-                        <Text style={styles.eventDate}>
-                          {isToday ? "오늘" : eventDateLabel} {event.eventTime}
-                        </Text>
+                        {/* <Text style={styles.detailText}>{event.location}</Text> */}
                       </View>
-                    </View>
-                    {isToday && (
-                      <View style={styles.dDayBadge}>
-                        <Text style={styles.dDayText}>D-Day</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.eventDetails}>
-                    <View style={styles.detailRow}>
-                      <Ionicons
-                        name="location-outline"
-                        size={16}
-                        color="#6c757d"
-                      />
-                      <Text style={styles.detailText}>{event.location}</Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Ionicons
-                        name={getTransportIcon(event.transportMethod) as any}
-                        size={16}
-                        color="#6c757d"
-                      />
-                      <Text style={styles.detailText}>
-                        {event.travelTimeMinutes}분 소요
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.timeGrid}>
-                    <View style={styles.timeCard}>
-                      <Text style={styles.timeLabel}>출발 시간</Text>
-                      <View style={styles.timeRow}>
+                      <View style={styles.detailRow}>
                         <Ionicons
-                          name="time-outline"
+                          // name={getTransportIcon(event.transportMethod) as any}
                           size={16}
-                          color="#4a9d6f"
+                          color="#6c757d"
                         />
-                        <Text style={styles.departureTime}>
-                          {event.departureTime}
+                        <Text style={styles.detailText}>
+                          {/* {event.travelTimeMinutes}분 소요 */}
                         </Text>
                       </View>
                     </View>
-                    <View style={styles.timeCard}>
-                      <Text style={styles.timeLabel}>도착 예정</Text>
-                      <View style={styles.timeRow}>
-                        <Ionicons
-                          name="time-outline"
-                          size={16}
-                          color="#1a1a1a"
-                        />
-                        <Text style={styles.arrivalTime}>
-                          {event.arrivalTime}
-                        </Text>
+
+                    <View style={styles.timeGrid}>
+                      <View style={styles.timeCard}>
+                        <Text style={styles.timeLabel}>출발 시간</Text>
+                        <View style={styles.timeRow}>
+                          <Ionicons
+                            name="time-outline"
+                            size={16}
+                            color="#4a9d6f"
+                          />
+                          <Text style={styles.departureTime}>
+                            {/* {event.departureTime} */}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.timeCard}>
+                        <Text style={styles.timeLabel}>도착 예정</Text>
+                        <View style={styles.timeRow}>
+                          <Ionicons
+                            name="time-outline"
+                            size={16}
+                            color="#1a1a1a"
+                          />
+                          <Text style={styles.arrivalTime}>
+                            {/* {event.arrivalTime} */}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
-                </TouchableOpacity>
+                  {/* </TouchableOpacity> */}
+                </Swipeable>
               );
             })}
           </View>
@@ -247,6 +280,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+  },
+  deleteAction: {
+    width: 88,
+    backgroundColor: "#ef4444",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 4,
+    marginLeft: 8,
+  },
+  deleteActionText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
   eventHeader: {
     flexDirection: "row",

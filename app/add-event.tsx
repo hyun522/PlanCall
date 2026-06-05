@@ -17,11 +17,7 @@ import {
 } from "react-native";
 import SearchLocationModal from "../components/SearchLocationModal";
 import { useEvents } from "../contexts/EventContext";
-import {
-  LocationSearchTarget,
-  SelectedPlace,
-  TransportMethod,
-} from "../types";
+import { LocationSearchTarget, SelectedPlace, TransportMethod } from "../types";
 import { isValidEventDate } from "../utils/dateValidation";
 import {
   calculateArrivalTime,
@@ -278,7 +274,7 @@ export default function AddEventScreen() {
 
   const handleSave = () => {
     if (
-      !calculated ||
+      // !calculated ||
       !formData.eventName ||
       !isValidEventDate(formData.eventDate) ||
       !formData.eventTime
@@ -306,14 +302,20 @@ export default function AddEventScreen() {
     router.back();
   };
 
+  // const isFormValid = Boolean(
+  //   formData.eventName &&
+  //   isValidEventDate(formData.eventDate) &&
+  //   formData.eventTime &&
+  //   formData.location &&
+  //   formData.departureLocation &&
+  //   formData.locationPlace &&
+  //   formData.departurePlace,
+  // );
+
   const isFormValid = Boolean(
     formData.eventName &&
     isValidEventDate(formData.eventDate) &&
-    formData.eventTime &&
-    formData.location &&
-    formData.departureLocation &&
-    formData.locationPlace &&
-    formData.departurePlace,
+    formData.eventTime,
   );
 
   return (
@@ -500,26 +502,24 @@ export default function AddEventScreen() {
         )}
       </ScrollView>
 
-      {calculated && (
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
-            onPress={handleSave}
-            disabled={!isFormValid}
-          >
-            <Ionicons
-              name="checkmark"
-              size={20}
-              color="#FFFFFF"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.saveButtonText}>저장하기</Text>
-          </TouchableOpacity>
-          <Text style={styles.footerText}>
-            저장하면 알림이 자동으로 등록돼요
-          </Text>
-        </View>
-      )}
+      {/* {calculated && ( */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
+          onPress={handleSave}
+          disabled={!isFormValid}
+        >
+          <Ionicons
+            name="checkmark"
+            size={20}
+            color="#FFFFFF"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.saveButtonText}>저장하기</Text>
+        </TouchableOpacity>
+        <Text style={styles.footerText}>저장하면 알림이 자동으로 등록돼요</Text>
+      </View>
+      {/* )} */}
 
       <Modal
         animationType="slide"

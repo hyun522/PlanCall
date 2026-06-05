@@ -12,10 +12,13 @@ import {
   View,
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
-import { isValidEventDate } from "../utils/dateValidation";
+// TODO: MVP 범위 조정으로 일정 수정 기능 임시 비활성화
+// import { isValidEventDate } from "../utils/dateValidation";
 
 export default function EditEventScreen() {
-  const { events, updateEvent, deleteEvent } = useEvents();
+  const { events, deleteEvent } = useEvents();
+  // TODO: MVP 범위 조정으로 일정 수정 기능 임시 비활성화
+  // const { events, updateEvent, deleteEvent } = useEvents();
   const router = useRouter();
   const { eventId } = useLocalSearchParams();
 
@@ -33,24 +36,25 @@ export default function EditEventScreen() {
     return null;
   }
 
-  const handleSave = () => {
-    if (!isFormValid) {
-      return;
-    }
-
-    updateEvent(eventId as string, {
-      ...event,
-      ...formData,
-    });
-    router.back();
-  };
-
-  const isFormValid = Boolean(
-    formData.eventName &&
-      isValidEventDate(formData.eventDate) &&
-      formData.eventTime &&
-      formData.location,
-  );
+  // TODO: MVP 범위 조정으로 일정 수정 기능 임시 비활성화
+  // const handleSave = () => {
+  //   if (!isFormValid) {
+  //     return;
+  //   }
+  //
+  //   updateEvent(eventId as string, {
+  //     ...event,
+  //     ...formData,
+  //   });
+  //   router.back();
+  // };
+  //
+  // const isFormValid = Boolean(
+  //   formData.eventName &&
+  //     isValidEventDate(formData.eventDate) &&
+  //     formData.eventTime &&
+  //     formData.location,
+  // );
 
   const handleDelete = () => {
     deleteEvent(eventId as string);
@@ -126,13 +130,14 @@ export default function EditEventScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
+        {/* TODO: MVP 범위 조정으로 일정 수정 기능 임시 비활성화 */}
+        {/* <TouchableOpacity
           style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
           onPress={handleSave}
           disabled={!isFormValid}
         >
           <Text style={styles.saveButtonText}>저장하기</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );
