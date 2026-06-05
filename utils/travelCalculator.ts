@@ -1,5 +1,16 @@
 import { TransportMethod } from "../types";
 
+const MINUTES_PER_DAY = 24 * 60;
+
+const formatMinutesAsTime = (totalMinutes: number) => {
+  const normalizedMinutes =
+    ((totalMinutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+  const hours = Math.floor(normalizedMinutes / 60);
+  const minutes = normalizedMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
 export function calculateTravelTime(
   departureLocation: string,
   destination: string,
@@ -21,18 +32,23 @@ export function calculateTravelTime(
 export function calculateDepartureTime(
   eventTime: string,
   travelTimeMinutes: number,
-  bufferMinutes: number,
   extraMinutes: number,
 ): string {
   const [hours, minutes] = eventTime.split(":").map(Number);
   const eventMinutes = hours * 60 + minutes;
-  const departureMinutes =
-    eventMinutes - travelTimeMinutes - bufferMinutes - extraMinutes;
+  const departureMinutes = eventMinutes - travelTimeMinutes - extraMinutes;
 
-  const departureHours = Math.floor(departureMinutes / 60);
-  const departureMins = departureMinutes % 60;
+  return formatMinutesAsTime(departureMinutes);
+}
 
-  return `${String(departureHours).padStart(2, "0")}:${String(departureMins).padStart(2, "0")}`;
+export function calculatePreparationStartTime(
+  departureTime: string,
+  preparationMinutes: number,
+): string {
+  const [hours, minutes] = departureTime.split(":").map(Number);
+  const departureMinutes = hours * 60 + minutes;
+
+  return formatMinutesAsTime(departureMinutes - preparationMinutes);
 }
 
 export function calculateArrivalTime(
@@ -43,8 +59,5 @@ export function calculateArrivalTime(
   const departureMinutes = hours * 60 + minutes;
   const arrivalMinutes = departureMinutes + travelTimeMinutes;
 
-  const arrivalHours = Math.floor(arrivalMinutes / 60) % 24;
-  const arrivalMins = arrivalMinutes % 60;
-
-  return `${String(arrivalHours).padStart(2, "0")}:${String(arrivalMins).padStart(2, "0")}`;
+  return formatMinutesAsTime(arrivalMinutes);
 }

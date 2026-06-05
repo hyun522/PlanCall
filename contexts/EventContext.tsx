@@ -42,12 +42,25 @@ const MOCK_EVENTS: Event[] = [
 
 const DEFAULT_SETTINGS: Settings = {
   hasCompletedOnboarding: false,
-  defaultDepartureLocation: "",
   arrivalBuffer: 0,
   extraTime: 0,
   departureNotification: true,
   arrivalNotification: false,
 };
+
+const normalizeSettings = (storedSettings?: Partial<Settings>): Settings => ({
+  ...DEFAULT_SETTINGS,
+  hasCompletedOnboarding:
+    storedSettings?.hasCompletedOnboarding ??
+    DEFAULT_SETTINGS.hasCompletedOnboarding,
+  arrivalBuffer: storedSettings?.arrivalBuffer ?? DEFAULT_SETTINGS.arrivalBuffer,
+  extraTime: storedSettings?.extraTime ?? DEFAULT_SETTINGS.extraTime,
+  departureNotification:
+    storedSettings?.departureNotification ??
+    DEFAULT_SETTINGS.departureNotification,
+  arrivalNotification:
+    storedSettings?.arrivalNotification ?? DEFAULT_SETTINGS.arrivalNotification,
+});
 
 export function EventProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>(MOCK_EVENTS);
@@ -67,7 +80,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         setEvents(JSON.parse(eventsData));
       }
       if (settingsData) {
-        setSettings(JSON.parse(settingsData));
+        setSettings(normalizeSettings(JSON.parse(settingsData)));
       }
       setIsLoaded(true);
     } catch (error) {
@@ -91,18 +104,6 @@ export function EventProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  useEffect(() => {
-    AsyncStorage.getAllKeys().then(async (keys) => {
-      const values = await AsyncStorage.multiGet(keys);
-
-      console.log(values);
-    });
-  }, []);
-
-  useEffect(() => {
-    AsyncStorage.clear();
-  }, []);
 
   // Save data to AsyncStorage whenever it changes
   useEffect(() => {

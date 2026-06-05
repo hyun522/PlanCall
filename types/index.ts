@@ -31,7 +31,6 @@ export interface Event {
 
 export interface Settings {
   hasCompletedOnboarding: boolean;
-  defaultDepartureLocation: string;
   arrivalBuffer: number;
   extraTime: number;
   departureNotification: boolean;

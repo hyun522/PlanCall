@@ -26,7 +26,6 @@ export default function SettingsScreen() {
 
   const [formData, setFormData] = useState({
     arrivalBuffer: settings.arrivalBuffer,
-    defaultDepartureLocation: settings.defaultDepartureLocation,
     extraTime: settings.extraTime,
     departureNotification: settings.departureNotification,
     arrivalNotification: settings.arrivalNotification,

@@ -22,6 +22,7 @@ import { isValidEventDate } from "../utils/dateValidation";
 import {
   calculateArrivalTime,
   calculateDepartureTime,
+  calculatePreparationStartTime,
   calculateTravelTime,
 } from "../utils/travelCalculator";
 
@@ -88,6 +89,7 @@ export default function AddEventScreen() {
 
   const [calculated, setCalculated] = useState<{
     travelTime: number;
+    preparationStartTime: string;
     departureTime: string;
     arrivalTime: string;
     transitRouteSummary?: string;
@@ -203,14 +205,19 @@ export default function AddEventScreen() {
     const departureTime = calculateDepartureTime(
       formData.eventTime,
       travelTime,
-      settings.arrivalBuffer,
       settings.extraTime,
+    );
+
+    const preparationStartTime = calculatePreparationStartTime(
+      departureTime,
+      settings.arrivalBuffer,
     );
 
     const arrivalTime = calculateArrivalTime(departureTime, travelTime);
 
     setCalculated({
       travelTime,
+      preparationStartTime,
       departureTime,
       arrivalTime,
       transitRouteSummary,
@@ -483,10 +490,14 @@ export default function AddEventScreen() {
               <Text style={styles.resultValue}>{calculated.travelTime}분</Text>
             </View>
             <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>출발 시간</Text>
+              <Text style={styles.resultLabel}>준비 시작</Text>
               <Text style={[styles.resultValue, { color: "#4a9d6f" }]}>
-                {calculated.departureTime}
+                {calculated.preparationStartTime}
               </Text>
+            </View>
+            <View style={styles.resultRow}>
+              <Text style={styles.resultLabel}>출발 시간</Text>
+              <Text style={styles.resultValue}>{calculated.departureTime}</Text>
             </View>
             <View style={styles.resultRow}>
               <Text style={styles.resultLabel}>도착 예정 시간</Text>
