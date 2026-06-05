@@ -48,14 +48,14 @@ export default function SettingsScreen() {
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* 도착 기준 시간 */}
+        {/* 준비 시간 */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="time-outline" size={20} color="#4a9d6f" />
-            <Text style={styles.sectionTitle}>도착 기준 시간 (콜타임)</Text>
+            <Text style={styles.sectionTitle}>준비 시간</Text>
           </View>
           <Text style={styles.sectionDescription}>
-            행사 시작 전 얼마나 일찍 도착할지 설정하세요 (분)
+            집을 나가기 전 준비에 필요한 시간(분)
           </Text>
           <View style={styles.inputRow}>
             <TextInput
@@ -70,25 +70,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* 기본 출발지 */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="location-outline" size={20} color="#4a9d6f" />
-            <Text style={styles.sectionTitle}>기본 출발지</Text>
-          </View>
-          <Text style={styles.sectionDescription}>
-            자주 사용하는 출발 위치를 설정하세요
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="예: 서울시 강남구"
-            value={formData.defaultDepartureLocation}
-            onChangeText={(text) =>
-              setFormData({ ...formData, defaultDepartureLocation: text })
-            }
-          />
-        </View>
-
         {/* 여유 시간 */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -96,7 +77,7 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>여유 시간</Text>
           </View>
           <Text style={styles.sectionDescription}>
-            예상 시간 외 추가로 확보할 시간 (분)
+            예상치 못한 상황을 대비해 추가로 확보할 시간(분)
           </Text>
           <View style={styles.inputRow}>
             <TextInput
@@ -140,9 +121,9 @@ export default function SettingsScreen() {
 
           <View style={styles.switchCard}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.switchLabel}>도착 알림</Text>
+              <Text style={styles.switchLabel}>준비 알림</Text>
               <Text style={styles.switchDescription}>
-                도착 예정 시간에 알림을 받습니다
+                준비 시간에 알림을 받습니다
               </Text>
             </View>
             <Switch
