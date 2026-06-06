@@ -210,7 +210,7 @@ export default function AddEventScreen() {
 
     const preparationStartTime = calculatePreparationStartTime(
       departureTime,
-      settings.arrivalBuffer,
+      settings.preparationTime,
     );
 
     const arrivalTime = calculateArrivalTime(departureTime, travelTime);

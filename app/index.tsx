@@ -16,7 +16,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEvents } from "../contexts/EventContext";
 import { Event, TransportMethod } from "../types";
 import { parseEventDate } from "../utils/dateValidation";
-import { calculatePreparationStartTime } from "../utils/travelCalculator";
+import {
+  calculateDepartureTime,
+  calculatePreparationStartTime,
+} from "../utils/travelCalculator";
 
 export default function EventListScreen() {
   const { events, settings, deleteEvent } = useEvents();
@@ -106,11 +109,18 @@ export default function EventListScreen() {
                     locale: ko,
                   })
                 : "날짜 확인 필요";
-              const hasPreparationTime = settings.arrivalBuffer > 0;
+              const departureTime = calculateDepartureTime(
+                event.eventTime,
+                event.travelTimeMinutes,
+                settings.extraTime,
+              );
+              const hasPreparationTime =
+                typeof settings.preparationTime === "number" &&
+                settings.preparationTime > 0;
               const preparationStartTime = hasPreparationTime
                 ? calculatePreparationStartTime(
-                    event.departureTime,
-                    settings.arrivalBuffer,
+                    departureTime,
+                    settings.preparationTime,
                   )
                 : null;
 
@@ -186,12 +196,7 @@ export default function EventListScreen() {
                           </View>
                         </View>
                       )}
-                      <View
-                        style={[
-                          styles.timeCard,
-                          !hasPreparationTime && styles.fullWidthTimeCard,
-                        ]}
-                      >
+                      <View style={styles.timeCard}>
                         <Text style={styles.timeLabel}>출발 시간</Text>
                         <View style={styles.timeRow}>
                           <Ionicons
@@ -200,7 +205,7 @@ export default function EventListScreen() {
                             color="#1a1a1a"
                           />
                           <Text style={styles.arrivalTime}>
-                            {event.departureTime}
+                            {departureTime}
                           </Text>
                         </View>
                       </View>

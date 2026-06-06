@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useEvents } from "../contexts/EventContext";
 
-type MinuteSettingField = "arrivalBuffer" | "extraTime";
+type MinuteSettingField = "preparationTime" | "extraTime";
 
 const MINUTE_OPTIONS = Array.from({ length: 25 }, (_, index) => index * 5);
 
@@ -25,7 +25,7 @@ export default function SettingsScreen() {
     useState<MinuteSettingField | null>(null);
 
   const [formData, setFormData] = useState({
-    arrivalBuffer: settings.arrivalBuffer,
+    preparationTime: settings.preparationTime,
     extraTime: settings.extraTime,
     departureNotification: settings.departureNotification,
     arrivalNotification: settings.arrivalNotification,
@@ -86,7 +86,7 @@ export default function SettingsScreen() {
             집을 나가기 전 준비에 필요한 시간(분)
           </Text>
           <View style={styles.inputRow}>
-            {renderMinuteSelector("arrivalBuffer", formData.arrivalBuffer)}
+            {renderMinuteSelector("preparationTime", formData.preparationTime)}
             <Text style={styles.unit}>분</Text>
           </View>
         </View>

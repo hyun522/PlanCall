@@ -42,7 +42,7 @@ const MOCK_EVENTS: Event[] = [
 
 const DEFAULT_SETTINGS: Settings = {
   hasCompletedOnboarding: false,
-  arrivalBuffer: 0,
+  preparationTime: 0,
   extraTime: 0,
   departureNotification: true,
   arrivalNotification: false,
@@ -53,7 +53,8 @@ const normalizeSettings = (storedSettings?: Partial<Settings>): Settings => ({
   hasCompletedOnboarding:
     storedSettings?.hasCompletedOnboarding ??
     DEFAULT_SETTINGS.hasCompletedOnboarding,
-  arrivalBuffer: storedSettings?.arrivalBuffer ?? DEFAULT_SETTINGS.arrivalBuffer,
+  preparationTime:
+    storedSettings?.preparationTime ?? DEFAULT_SETTINGS.preparationTime,
   extraTime: storedSettings?.extraTime ?? DEFAULT_SETTINGS.extraTime,
   departureNotification:
     storedSettings?.departureNotification ??

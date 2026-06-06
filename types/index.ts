@@ -31,7 +31,7 @@ export interface Event {
 
 export interface Settings {
   hasCompletedOnboarding: boolean;
-  arrivalBuffer: number;
+  preparationTime: number;
   extraTime: number;
   departureNotification: boolean;
   arrivalNotification: boolean;
