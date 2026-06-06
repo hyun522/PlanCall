@@ -16,9 +16,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEvents } from "../contexts/EventContext";
 import { Event, TransportMethod } from "../types";
 import { parseEventDate } from "../utils/dateValidation";
+import { calculatePreparationStartTime } from "../utils/travelCalculator";
 
 export default function EventListScreen() {
-  const { events, deleteEvent } = useEvents();
+  const { events, settings, deleteEvent } = useEvents();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -30,6 +31,17 @@ export default function EventListScreen() {
         return "bus";
       default:
         return "car";
+    }
+  };
+
+  const getTransportLabel = (method: TransportMethod) => {
+    switch (method) {
+      case "car":
+        return "자차";
+      case "transit":
+        return "대중교통";
+      default:
+        return "자차";
     }
   };
 
@@ -90,10 +102,17 @@ export default function EventListScreen() {
                 eventDate !== null &&
                 format(new Date(), "yyyy-MM-dd") === event.eventDate;
               const eventDateLabel = eventDate
-                ? format(eventDate, "M월 d일 (EEE)", {
+                ? format(eventDate, "yyyy.MM.dd (EEE)", {
                     locale: ko,
                   })
                 : "날짜 확인 필요";
+              const hasPreparationTime = settings.arrivalBuffer > 0;
+              const preparationStartTime = hasPreparationTime
+                ? calculatePreparationStartTime(
+                    event.departureTime,
+                    settings.arrivalBuffer,
+                  )
+                : null;
 
               return (
                 <Swipeable
@@ -118,8 +137,7 @@ export default function EventListScreen() {
                             color="#6c757d"
                           />
                           <Text style={styles.eventDate}>
-                            {isToday ? "오늘" : eventDateLabel}{" "}
-                            {event.eventTime}
+                            {eventDateLabel} {event.eventTime}
                           </Text>
                         </View>
                       </View>
@@ -137,36 +155,44 @@ export default function EventListScreen() {
                           size={16}
                           color="#6c757d"
                         />
-                        {/* <Text style={styles.detailText}>{event.location}</Text> */}
+                        <Text style={styles.detailText}>{event.location}</Text>
                       </View>
                       <View style={styles.detailRow}>
                         <Ionicons
-                          // name={getTransportIcon(event.transportMethod) as any}
+                          name={getTransportIcon(event.transportMethod) as any}
                           size={16}
                           color="#6c757d"
                         />
                         <Text style={styles.detailText}>
-                          {/* {event.travelTimeMinutes}분 소요 */}
+                          {getTransportLabel(event.transportMethod)} ·{" "}
+                          {event.departureLocation} → {event.location}
                         </Text>
                       </View>
                     </View>
 
                     <View style={styles.timeGrid}>
-                      <View style={styles.timeCard}>
-                        <Text style={styles.timeLabel}>출발 시간</Text>
-                        <View style={styles.timeRow}>
-                          <Ionicons
-                            name="time-outline"
-                            size={16}
-                            color="#4a9d6f"
-                          />
-                          <Text style={styles.departureTime}>
-                            {/* {event.departureTime} */}
-                          </Text>
+                      {hasPreparationTime && preparationStartTime && (
+                        <View style={styles.timeCard}>
+                          <Text style={styles.timeLabel}>준비 시간</Text>
+                          <View style={styles.timeRow}>
+                            <Ionicons
+                              name="time-outline"
+                              size={16}
+                              color="#1a1a1a"
+                            />
+                            <Text style={styles.departureTime}>
+                              {preparationStartTime}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <View style={styles.timeCard}>
-                        <Text style={styles.timeLabel}>도착 예정</Text>
+                      )}
+                      <View
+                        style={[
+                          styles.timeCard,
+                          !hasPreparationTime && styles.fullWidthTimeCard,
+                        ]}
+                      >
+                        <Text style={styles.timeLabel}>출발 시간</Text>
                         <View style={styles.timeRow}>
                           <Ionicons
                             name="time-outline"
@@ -174,7 +200,7 @@ export default function EventListScreen() {
                             color="#1a1a1a"
                           />
                           <Text style={styles.arrivalTime}>
-                            {/* {event.arrivalTime} */}
+                            {event.departureTime}
                           </Text>
                         </View>
                       </View>
@@ -298,7 +324,7 @@ const styles = StyleSheet.create({
   eventHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   eventTitleContainer: {
     flex: 1,
@@ -307,7 +333,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1a1a1a",
-    marginBottom: 4,
+    marginBottom: 16,
   },
   eventDateRow: {
     flexDirection: "row",
@@ -365,7 +391,7 @@ const styles = StyleSheet.create({
   departureTime: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#4a9d6f",
+    color: "#1a1a1a",
   },
   arrivalTime: {
     fontSize: 16,
