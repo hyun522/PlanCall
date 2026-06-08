@@ -224,7 +224,7 @@ export default function AddEventScreen() {
     });
   };
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     if (
       !formData.departureLocation ||
       !formData.location ||
@@ -241,13 +241,23 @@ export default function AddEventScreen() {
       return;
     }
 
-    const travelTime = calculateTravelTime(
-      formData.departureLocation,
-      formData.location,
-      formData.transportMethod,
-    );
+    try {
+      const route = await calculateTravelTime(
+        formData.departurePlace,
+        formData.locationPlace,
+        formData.transportMethod,
+      );
 
-    calculateSchedule(travelTime);
+      console.log("Kakao driving route result", {
+        distanceMeters: route.distanceMeters,
+        durationSeconds: route.durationSeconds,
+        durationMinutes: route.durationMinutes,
+      });
+
+      calculateSchedule(route.durationMinutes);
+    } catch (error) {
+      console.error("Failed to calculate driving route:", error);
+    }
   };
 
   const handleSelectTransitRoute = (route: MockTransitRoute) => {

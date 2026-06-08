@@ -1,6 +1,30 @@
 import { TransportMethod } from "../types";
 
 const MINUTES_PER_DAY = 24 * 60;
+const KAKAO_DIRECTIONS_URL =
+  "https://apis-navi.kakaomobility.com/v1/directions";
+
+export type RouteCoordinate = {
+  latitude: number;
+  longitude: number;
+};
+
+export type TravelRouteResult = {
+  distanceMeters: number;
+  durationSeconds: number;
+  durationMinutes: number;
+};
+
+type KakaoDirectionsResponse = {
+  routes?: {
+    result_code: number;
+    result_msg: string;
+    summary?: {
+      distance: number;
+      duration: number;
+    };
+  }[];
+};
 
 const formatMinutesAsTime = (totalMinutes: number) => {
   const normalizedMinutes =
@@ -11,22 +35,55 @@ const formatMinutesAsTime = (totalMinutes: number) => {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
-export function calculateTravelTime(
-  departureLocation: string,
-  destination: string,
+const formatRouteCoordinate = ({ latitude, longitude }: RouteCoordinate) =>
+  `${longitude},${latitude}`;
+
+export async function calculateTravelTime(
+  origin: RouteCoordinate,
+  destination: RouteCoordinate,
   transportMethod: TransportMethod,
-): number {
-  // Mock calculation based on transport method
-  // In a real app, this would use Google Maps API or similar
+): Promise<TravelRouteResult> {
+  if (transportMethod !== "car") {
+    throw new Error("지원하지 않는 이동수단입니다.");
+  }
 
-  const baseTime = Math.floor(Math.random() * 30) + 10; // 10-40 minutes base
+  const kakaoRestApiKey = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
 
-  const multipliers = {
-    car: 1.0,
-    transit: 1.5,
+  if (!kakaoRestApiKey) {
+    throw new Error("EXPO_PUBLIC_KAKAO_REST_API_KEY가 설정되지 않았습니다.");
+  }
+
+  const params = new URLSearchParams({
+    origin: formatRouteCoordinate(origin),
+    destination: formatRouteCoordinate(destination),
+    priority: "RECOMMEND",
+    summary: "true",
+  });
+
+  const response = await fetch(`${KAKAO_DIRECTIONS_URL}?${params.toString()}`, {
+    headers: {
+      Authorization: `KakaoAK ${kakaoRestApiKey}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("카카오 자동차 길찾기 요청에 실패했습니다.");
+  }
+
+  const data = (await response.json()) as KakaoDirectionsResponse;
+
+  const route = data.routes?.[0];
+
+  if (!route || route.result_code !== 0 || !route.summary) {
+    throw new Error(route?.result_msg || "자동차 길찾기 결과가 없습니다.");
+  }
+
+  return {
+    distanceMeters: route.summary.distance,
+    durationSeconds: route.summary.duration,
+    durationMinutes: Math.ceil(route.summary.duration / 60),
   };
-
-  return Math.round(baseTime * multipliers[transportMethod]);
 }
 
 export function calculateDepartureTime(
