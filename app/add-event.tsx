@@ -24,25 +24,17 @@ import {
   calculateDepartureTime,
   calculatePreparationStartTime,
   calculateTravelTime,
+  fetchTransitRoutes, //요약본 총시간 반환
+  TransitRouteResult,
 } from "../utils/travelCalculator";
 
 type PickerMode = "date" | "time";
-type MockTransitRoute = {
-  id: string;
-  durationMinutes: number;
-  summary: string;
-};
 type TransportOption = {
   value: TransportMethod;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
 };
 
-const MOCK_TRANSIT_ROUTES: MockTransitRoute[] = [
-  { id: "subway-2-9", durationMinutes: 43, summary: "2호선 -> 9호선" },
-  { id: "bus", durationMinutes: 48, summary: "버스" },
-  { id: "subway-2-1", durationMinutes: 52, summary: "2호선 -> 1호선" },
-];
 const TRANSPORT_OPTIONS: TransportOption[] = [
   { value: "car", icon: "car", label: "자차" },
   { value: "transit", icon: "bus", label: "대중교통" },
@@ -96,6 +88,7 @@ export default function AddEventScreen() {
   } | null>(null);
   const [visiblePicker, setVisiblePicker] = useState<PickerMode | null>(null);
   const [isTransitModalVisible, setIsTransitModalVisible] = useState(false);
+  const [transitRoutes, setTransitRoutes] = useState<TransitRouteResult[]>([]);
   const [locationModalTarget, setLocationModalTarget] =
     useState<LocationSearchTarget | null>(null);
 
@@ -237,7 +230,17 @@ export default function AddEventScreen() {
     }
 
     if (formData.transportMethod === "transit") {
-      setIsTransitModalVisible(true);
+      try {
+        const routes = await fetchTransitRoutes(
+          formData.departurePlace,
+          formData.locationPlace,
+        );
+
+        setTransitRoutes(routes);
+        setIsTransitModalVisible(true);
+      } catch (error) {
+        console.error("Failed to calculate transit routes:", error);
+      }
       return;
     }
 
@@ -260,7 +263,7 @@ export default function AddEventScreen() {
     }
   };
 
-  const handleSelectTransitRoute = (route: MockTransitRoute) => {
+  const handleSelectTransitRoute = (route: TransitRouteResult) => {
     setIsTransitModalVisible(false);
     calculateSchedule(route.durationMinutes, route.summary);
   };
@@ -555,7 +558,7 @@ export default function AddEventScreen() {
             </View>
 
             <View style={styles.routeList}>
-              {MOCK_TRANSIT_ROUTES.map((route) => (
+              {transitRoutes.slice(0, 8).map((route) => (
                 <TouchableOpacity
                   key={route.id}
                   style={styles.routeOption}
