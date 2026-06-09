@@ -85,16 +85,8 @@ const getLaneList = (lane?: ODsayLane | ODsayLane[]) => {
 
 const createTransitSectionSummary = (section: ODsaySubPath) => {
   const lanes = getLaneList(section.lane);
-  console.log("lanes", lanes);
 
   if (section.trafficType === 1) {
-    console.log(
-      "1",
-      lanes
-        .map((lane) => lane.name)
-        .filter(Boolean)
-        .join("/"),
-    );
     return lanes
       .map((lane) => lane.name)
       .filter(Boolean)
@@ -102,13 +94,6 @@ const createTransitSectionSummary = (section: ODsaySubPath) => {
   }
 
   if (section.trafficType === 2) {
-    console.log(
-      "2",
-      lanes
-        .map((lane) => (lane.busNo ? `버스 ${lane.busNo}` : undefined))
-        .filter(Boolean)
-        .join("/"),
-    );
     return lanes
       .map((lane) => (lane.busNo ? `버스 ${lane.busNo}` : undefined))
       .filter(Boolean)

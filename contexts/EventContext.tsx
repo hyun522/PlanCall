@@ -91,7 +91,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveData = useCallback(async () => {
-    console.log("saving events", events);
+    // console.log("saving events", events);
     try {
       await Promise.all([
         AsyncStorage.setItem("events", JSON.stringify(events)),
