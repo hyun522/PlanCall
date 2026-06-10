@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications"; //모듈 전체를 하나의 객체로 가져오는 문법 작명한 이름에 담기
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Modal,
   Platform,
   SafeAreaView,
@@ -34,6 +36,46 @@ export default function SettingsScreen() {
   const handleSave = () => {
     updateSettings(formData);
     router.back();
+  };
+
+  const scheduleTestNotification = async () => {
+    const permission = await Notifications.getPermissionsAsync(); //현재 알림 권한 상태 확인
+    let finalStatus = permission.status;
+
+    if (finalStatus !== "granted") {
+      //허용안됨
+      const requestedPermission = await Notifications.requestPermissionsAsync({
+        //알림권한 확인후 없으면 팝업 확인
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+      });
+      finalStatus = requestedPermission.status;
+    }
+
+    if (finalStatus !== "granted") {
+      Alert.alert(
+        "알림 권한 필요",
+        "알림 권한을 허용한 뒤 다시 시도해 주세요.",
+      );
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      //알림예약
+      content: {
+        title: "PlanCall",
+        body: "10초 뒤 알림 테스트 성공",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 10,
+      },
+    });
+
+    Alert.alert("알림 테스트", "10초 뒤 테스트 알림이 발송됩니다.");
   };
 
   const handleSelectMinute = (value: number) => {
@@ -149,6 +191,24 @@ export default function SettingsScreen() {
               thumbColor="#FFFFFF"
             />
           </View>
+        </View>
+
+        {/* TODO: 실제 일정 알림 연동 전 로컬 알림 검증용 임시 UI입니다. */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="notifications" size={20} color="#4a9d6f" />
+            <Text style={styles.sectionTitle}>알림 테스트</Text>
+          </View>
+          <Text style={styles.sectionDescription}>
+            버튼을 누르면 10초 뒤 테스트 알림을 보냅니다
+          </Text>
+          <TouchableOpacity
+            style={styles.testNotificationButton}
+            activeOpacity={0.8}
+            onPress={scheduleTestNotification}
+          >
+            <Text style={styles.testNotificationButtonText}>알림 테스트</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -299,6 +359,20 @@ const styles = StyleSheet.create({
   switchDescription: {
     fontSize: 14,
     color: "#6c757d",
+  },
+  testNotificationButton: {
+    height: 48,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#4a9d6f",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  testNotificationButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#4a9d6f",
   },
   footer: {
     padding: 24,

@@ -1,7 +1,18 @@
+import * as Notifications from "expo-notifications";
 import { Redirect, Slot, useSegments } from "expo-router";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { EventProvider, useEvents } from "../contexts/EventContext";
+
+Notifications.setNotificationHandler({
+  //"알림이 왔을 때 어떻게 보여줄까?"
+  handleNotification: async () => ({
+    shouldPlaySound: false, //소리 재생
+    shouldSetBadge: false,
+    shouldShowBanner: true, //배너 표시
+    shouldShowList: true,
+  }),
+});
 
 function RootLayoutContent() {
   const { settings, isLoaded } = useEvents();
