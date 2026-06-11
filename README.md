@@ -43,7 +43,7 @@
 
 ### 개발 중 알게 된 AI 사용법: Context Window와 Token의 관리
 
-📖 [자세히 보기](https://velog.io/@jhj1004v/%EC%8A%A4%ED%81%AC%EB%A1%A4%EC%9D%B4-%EB%A7%88%EC%9D%8C%EB%8C%80%EB%A1%9C-%EC%9B%80%EC%A7%81%EC%9D%B4%EB%8D%98-%EB%AC%B8%EC%A0%9C%EB%A5%BC-%ED%95%B4%EA%B2%B0%ED%95%98%EB%A9%B0-%EB%B0%B0%EC%9A%B4-%EA%B2%83)
+📖 [자세히 보기](https://velog.io/@jhj1004v/AI-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%9D%98-%EA%B8%B0%EC%96%B5-%EB%B0%A9%EC%8B%9D-Context-Window%EC%99%80-Token-%EA%B4%80%EB%A6%AC)
 
 
 ### React Native + expo 에서 왜 어떤 라이브러리는 app.json에 등록해야 할까?
