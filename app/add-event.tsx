@@ -2,9 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
+  Linking,
   Modal,
   Platform,
   SafeAreaView,
@@ -49,6 +52,56 @@ const formatDate = (date: Date) =>
 
 const formatTime = (date: Date) =>
   `${padTwoDigits(date.getHours())}:${padTwoDigits(date.getMinutes())}`;
+
+const getTimeMinutes = (time: string) => {
+  //12:30
+  const [hours, minutes] = time.split(":").map(Number); //12,30
+
+  return hours * 60 + minutes; //12*60 +minutes
+};
+
+const getNotificationDate = (
+  eventDate: string,
+  eventTime: string,
+  notificationTime: string,
+) => {
+  const [year, month, day] = eventDate.split("-").map(Number); //약속일정
+  const [hours, minutes] = notificationTime.split(":").map(Number); //알림일정
+  const notificationDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+  if (getTimeMinutes(notificationTime) > getTimeMinutes(eventTime)) {
+    //알림시간 > 약속시간
+    notificationDate.setDate(notificationDate.getDate() - 1); //날짜 하루 당ㅣㅣ
+  }
+
+  return notificationDate; //Sat Jun 20 2026 08:30:00 GMT+0900
+};
+
+const checkNotificationPermission = async () => {
+  const permission = await Notifications.getPermissionsAsync();
+
+  if (permission.status === "granted") {
+    return true;
+  }
+
+  Alert.alert(
+    "알림 권한 필요",
+    "출발 시간 알림을 받으려면 알림 권한이 필요합니다.",
+    [
+      { text: "취소", style: "cancel" },
+      {
+        text: "설정으로 이동",
+        onPress: () => {
+          Linking.openSettings().catch((error) => {
+            console.error("Failed to open settings:", error);
+          });
+        },
+      },
+    ],
+  );
+
+  return false;
+};
 
 const getPickerDate = (eventDate: string, eventTime: string) => {
   const [year, month, day] = eventDate.split("-").map(Number);
@@ -268,6 +321,79 @@ export default function AddEventScreen() {
     calculateSchedule(route.durationMinutes, route.summary);
   };
 
+  const scheduleDepartureNotification = async (
+    eventId: string,
+    eventName: string,
+    eventDate: string,
+    eventTime: string,
+    departureTime: string,
+  ) => {
+    const notificationDate = getNotificationDate(
+      eventDate,
+      eventTime,
+      departureTime,
+    );
+
+    if (notificationDate <= new Date()) {
+      console.log("Skip past departure notification", {
+        eventId,
+        notificationDate,
+      });
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "출발 시간입니다.",
+        body: `${eventTime} ${eventName}에 출발하세요.`,
+        data: { eventId, notificationType: "departure" },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: notificationDate,
+      },
+    });
+  };
+
+  const schedulePreparationNotification = async (
+    eventId: string,
+    eventName: string,
+    eventDate: string,
+    eventTime: string,
+    preparationStartTime: string,
+  ) => {
+    if (settings.preparationTime <= 0) {
+      return;
+    }
+
+    const notificationDate = getNotificationDate(
+      eventDate,
+      eventTime,
+      preparationStartTime,
+    );
+
+    if (notificationDate <= new Date()) {
+      //알림 시간은 현재 시간이 지난 기점으로만 가ㅇ
+      console.log("Skip past preparation notification", {
+        eventId,
+        notificationDate,
+      });
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "준비를 시작할 시간입니다.",
+        body: `${eventTime} ${eventName}을 위해 준비를 시작하세요.`,
+        data: { eventId, notificationType: "preparation" },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: notificationDate,
+      },
+    });
+  };
+
   const handleSelectPlace = (place: SelectedPlace) => {
     if (!locationModalTarget) {
       return;
@@ -292,7 +418,7 @@ export default function AddEventScreen() {
     setLocationModalTarget(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (
       !calculated ||
       !formData.eventName ||
@@ -302,8 +428,15 @@ export default function AddEventScreen() {
       return;
     }
 
+    const hasNotificationPermission = await checkNotificationPermission();
+
+    if (!hasNotificationPermission) {
+      return;
+    }
+
+    const eventId = Date.now().toString();
     const newEvent = {
-      id: Date.now().toString(),
+      id: eventId,
       eventName: formData.eventName,
       eventDate: formData.eventDate,
       eventTime: formData.eventTime,
@@ -319,6 +452,26 @@ export default function AddEventScreen() {
     };
 
     addEvent(newEvent);
+
+    try {
+      await scheduleDepartureNotification(
+        eventId,
+        formData.eventName,
+        formData.eventDate,
+        formData.eventTime,
+        calculated.departureTime,
+      );
+      await schedulePreparationNotification(
+        eventId,
+        formData.eventName,
+        formData.eventDate,
+        formData.eventTime,
+        calculated.preparationStartTime,
+      );
+    } catch (error) {
+      console.error("Failed to schedule event notifications:", error);
+    }
+
     router.back();
   };
 
