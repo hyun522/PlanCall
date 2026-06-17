@@ -84,6 +84,21 @@ const getNotificationDate = (
 const getTestNotificationDate = () =>
   new Date(Date.now() + TEST_NOTIFICATION_DELAY_SECONDS * 1000);
 
+const getInitialFormData = () => {
+  const now = new Date();
+
+  return {
+    eventName: "",
+    eventDate: formatDate(now),
+    eventTime: formatTime(now),
+    location: "",
+    locationPlace: null as SelectedPlace | null,
+    departureLocation: "",
+    departurePlace: null as SelectedPlace | null,
+    transportMethod: "transit" as TransportMethod,
+  };
+};
+
 const checkNotificationPermission = async () => {
   const permission = await Notifications.getPermissionsAsync();
 
@@ -128,16 +143,7 @@ export default function AddEventScreen() {
   const { addEvent, settings } = useEvents();
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    eventName: "",
-    eventDate: "",
-    eventTime: "",
-    location: "",
-    locationPlace: null as SelectedPlace | null,
-    departureLocation: "",
-    departurePlace: null as SelectedPlace | null,
-    transportMethod: "transit" as TransportMethod,
-  });
+  const [formData, setFormData] = useState(getInitialFormData);
 
   const [calculated, setCalculated] = useState<{
     travelTime: number;
