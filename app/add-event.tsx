@@ -43,6 +43,10 @@ const TRANSPORT_OPTIONS: TransportOption[] = [
   { value: "transit", icon: "bus", label: "대중교통" },
 ];
 
+// TODO: Remove this after local notification verification. Development only.
+const TEST_NOTIFICATION = true;
+const TEST_NOTIFICATION_DELAY_SECONDS = 5;
+
 const padTwoDigits = (value: number) => value.toString().padStart(2, "0");
 
 const formatDate = (date: Date) =>
@@ -76,6 +80,9 @@ const getNotificationDate = (
 
   return notificationDate; //Sat Jun 20 2026 08:30:00 GMT+0900
 };
+
+const getTestNotificationDate = () =>
+  new Date(Date.now() + TEST_NOTIFICATION_DELAY_SECONDS * 1000);
 
 const checkNotificationPermission = async () => {
   const permission = await Notifications.getPermissionsAsync();
@@ -328,11 +335,9 @@ export default function AddEventScreen() {
     eventTime: string,
     departureTime: string,
   ) => {
-    const notificationDate = getNotificationDate(
-      eventDate,
-      eventTime,
-      departureTime,
-    );
+    const notificationDate = TEST_NOTIFICATION
+      ? getTestNotificationDate()
+      : getNotificationDate(eventDate, eventTime, departureTime);
 
     if (notificationDate <= new Date()) {
       console.log("Skip past departure notification", {
@@ -362,15 +367,13 @@ export default function AddEventScreen() {
     eventTime: string,
     preparationStartTime: string,
   ) => {
-    if (settings.preparationTime <= 0) {
+    if (!TEST_NOTIFICATION && settings.preparationTime <= 0) {
       return;
     }
 
-    const notificationDate = getNotificationDate(
-      eventDate,
-      eventTime,
-      preparationStartTime,
-    );
+    const notificationDate = TEST_NOTIFICATION
+      ? getTestNotificationDate()
+      : getNotificationDate(eventDate, eventTime, preparationStartTime);
 
     if (notificationDate <= new Date()) {
       //알림 시간은 현재 시간이 지난 기점으로만 가ㅇ
