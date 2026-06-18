@@ -200,7 +200,7 @@ export async function fetchTransitRoutes(
 
   const data = (await response.json()) as ODsayTransitPathResponse;
 
-  console.log("ODsay transit route raw response", data);
+  // console.log("ODsay transit route raw response", data);
 
   if (data.error) {
     throw new Error(
@@ -217,7 +217,7 @@ export async function fetchTransitRoutes(
       summary: createTransitRouteSummary(route),
     })) ?? [];
 
-  console.log("ODsay transit route mapped result", routes);
+  // console.log("ODsay transit route mapped result", routes);
 
   if (routes.length === 0) {
     throw new Error("ODsay 대중교통 경로가 없습니다.");
