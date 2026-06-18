@@ -493,6 +493,7 @@ export default function AddEventScreen() {
     formData.locationPlace &&
     formData.departurePlace,
   );
+  const canSave = isFormValid && calculated !== null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -685,9 +686,9 @@ export default function AddEventScreen() {
       {/* {calculated && ( */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.saveButton, !isFormValid && styles.buttonDisabled]}
+          style={[styles.saveButton, !canSave && styles.buttonDisabled]}
           onPress={handleSave}
-          disabled={!isFormValid}
+          disabled={!canSave}
         >
           <Ionicons
             name="checkmark"
