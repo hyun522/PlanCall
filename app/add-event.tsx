@@ -4,9 +4,11 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
+  AppStateStatus,
   Linking,
   Modal,
   Platform,
@@ -99,7 +101,7 @@ const getInitialFormData = () => {
   };
 };
 
-const checkNotificationPermission = async () => {
+const checkNotificationPermission = async (onOpenSettings?: () => void) => {
   const permission = await Notifications.getPermissionsAsync();
 
   if (permission.status === "granted") {
@@ -114,6 +116,7 @@ const checkNotificationPermission = async () => {
       {
         text: "설정으로 이동",
         onPress: () => {
+          onOpenSettings?.();
           Linking.openSettings().catch((error) => {
             console.error("Failed to open settings:", error);
           });
@@ -142,6 +145,8 @@ const getPickerDate = (eventDate: string, eventTime: string) => {
 export default function AddEventScreen() {
   const { addEvent, settings } = useEvents();
   const router = useRouter();
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const shouldRecheckNotificationPermissionRef = useRef(false); //"설정으로 이동 버튼을 눌렀는지 기억하는 플래그"
 
   const [formData, setFormData] = useState(getInitialFormData);
 
@@ -157,6 +162,43 @@ export default function AddEventScreen() {
   const [transitRoutes, setTransitRoutes] = useState<TransitRouteResult[]>([]);
   const [locationModalTarget, setLocationModalTarget] =
     useState<LocationSearchTarget | null>(null);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      const previousAppState = appStateRef.current;
+      appStateRef.current = nextAppState;
+
+      const returnedToActive =
+        nextAppState === "active" &&
+        (previousAppState === "background" || previousAppState === "inactive");
+
+      if (
+        !returnedToActive ||
+        !shouldRecheckNotificationPermissionRef.current
+      ) {
+        return;
+      }
+
+      shouldRecheckNotificationPermissionRef.current = false;
+
+      Notifications.getPermissionsAsync()
+        .then((permission) => {
+          if (permission.status === "granted") {
+            Alert.alert(
+              "알림 권한 허용",
+              "알림 권한이 허용되었습니다. 이제 일정을 저장할 수 있습니다.",
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to recheck notification permission:", error);
+        });
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const updateScheduleDateTime = (mode: PickerMode, date: Date) => {
     setCalculated(null);
@@ -437,7 +479,9 @@ export default function AddEventScreen() {
       return;
     }
 
-    const hasNotificationPermission = await checkNotificationPermission();
+    const hasNotificationPermission = await checkNotificationPermission(() => {
+      shouldRecheckNotificationPermissionRef.current = true;
+    });
 
     if (!hasNotificationPermission) {
       return;
