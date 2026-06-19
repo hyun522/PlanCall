@@ -764,7 +764,10 @@ export default function AddEventScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.routeList}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.routeListContent}
+            >
               {transitRoutes.slice(0, 8).map((route) => (
                 <TouchableOpacity
                   key={route.id}
@@ -778,7 +781,7 @@ export default function AddEventScreen() {
                   <Text style={styles.routeSummary}>{route.summary}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1017,6 +1020,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 24,
     gap: 16,
+    maxHeight: "80%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -1036,7 +1040,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#f3f4f6",
   },
-  routeList: {
+  routeListContent: {
     gap: 12,
   },
   routeOption: {
