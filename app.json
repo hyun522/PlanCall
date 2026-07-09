@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PlanCall",
-    "slug": "PlanCall",
+    "slug": "plan-call",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/plancall-logo.png",
@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.j_company.plancall",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },
@@ -41,6 +42,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f7c6b962-894b-4b77-8eef-1e7738b41d59"
+      }
     }
   }
 }
