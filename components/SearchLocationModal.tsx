@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Modal,
   Platform,
   SafeAreaView,
@@ -19,8 +20,43 @@ type KakaoPlaceDocument = {
   place_name: string;
   address_name: string;
   road_address_name: string;
+  place_url?: string;
   x: string;
   y: string;
+};
+
+type KakaoAddressDetail = {
+  address_name: string;
+  x?: string;
+  y?: string;
+};
+
+type KakaoRoadAddressDetail = KakaoAddressDetail & {
+  building_name: string;
+};
+
+type KakaoAddressDocument = {
+  address_name: string;
+  address_type: "REGION" | "ROAD" | "REGION_ADDR" | "ROAD_ADDR";
+  x: string;
+  y: string;
+  address: KakaoAddressDetail | null;
+  road_address: KakaoRoadAddressDetail | null;
+};
+
+type KakaoSearchResponse<T> = {
+  documents?: T[];
+};
+
+type SearchResult = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  roadAddress?: string;
+  jibunAddress?: string;
+  kakaoMapUrl?: string;
 };
 
 type SearchLocationModalProps = {
@@ -32,18 +68,93 @@ type SearchLocationModalProps = {
 
 const KAKAO_LOCAL_KEYWORD_URL =
   "https://dapi.kakao.com/v2/local/search/keyword.json";
+const KAKAO_LOCAL_ADDRESS_URL =
+  "https://dapi.kakao.com/v2/local/search/address.json";
 
 const getTargetLabel = (target: LocationSearchTarget) =>
   target === "departure" ? "출발지" : "목적지";
 
-const mapKakaoPlaceToSelectedPlace = (
+const createKakaoMapWebUrl = (result: SearchResult) =>
+  `https://map.kakao.com/link/map/${encodeURIComponent(result.name)},${
+    result.latitude
+  },${result.longitude}`;
+
+const createKakaoMapAppUrl = (result: SearchResult) =>
+  `kakaomap://look?p=${result.latitude},${result.longitude}`;
+
+const openUrlSafely = async (url: string) => {
+  await Linking.openURL(url);
+};
+
+const isAddressLikeQuery = (keyword: string) =>
+  /\d/.test(keyword) ||
+  /(로|길|대로|번길|읍|면|동|리|가)\s*\d*/.test(keyword) ||
+  /(특별시|광역시|특례시|도|시|군|구)/.test(keyword);
+
+const mapKakaoPlaceToSearchResult = (
   document: KakaoPlaceDocument,
-): SelectedPlace => ({
+): SearchResult => ({
+  id: `place-${document.id}`,
   name: document.place_name,
   latitude: Number(document.y),
   longitude: Number(document.x),
   address: document.road_address_name || document.address_name,
+  roadAddress: document.road_address_name,
+  jibunAddress: document.address_name,
+  kakaoMapUrl: document.place_url,
 });
+
+const mapKakaoAddressToSearchResult = (
+  document: KakaoAddressDocument,
+): SearchResult => {
+  const roadAddress = document.road_address?.address_name;
+  const jibunAddress = document.address?.address_name;
+  const name =
+    document.road_address?.building_name ||
+    roadAddress ||
+    jibunAddress ||
+    document.address_name;
+
+  return {
+    id: `address-${document.address_type}-${document.x}-${document.y}-${document.address_name}`,
+    name,
+    latitude: Number(document.y),
+    longitude: Number(document.x),
+    address: roadAddress || jibunAddress || document.address_name,
+    roadAddress,
+    jibunAddress,
+  };
+};
+
+const mapSearchResultToSelectedPlace = (
+  result: SearchResult,
+): SelectedPlace => ({
+  name: result.name,
+  latitude: result.latitude,
+  longitude: result.longitude,
+  address: result.address,
+});
+
+const dedupeSearchResults = (results: SearchResult[]) => {
+  const seen = new Set<string>();
+
+  return results.filter((result) => {
+    const key = [
+      result.name,
+      result.roadAddress,
+      result.jibunAddress,
+      result.latitude.toFixed(6),
+      result.longitude.toFixed(6),
+    ].join("|");
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
 
 export default function SearchLocationModal({
   visible,
@@ -52,7 +163,7 @@ export default function SearchLocationModal({
   onSelectPlace,
 }: SearchLocationModalProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<KakaoPlaceDocument[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -89,33 +200,83 @@ export default function SearchLocationModal({
     setErrorMessage(null);
 
     try {
-      const url = `${KAKAO_LOCAL_KEYWORD_URL}?query=${encodeURIComponent(
-        keyword,
-      )}&size=15`;
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `KakaoAK ${kakaoRestApiKey}`,
-        },
-      });
+      const headers = {
+        Authorization: `KakaoAK ${kakaoRestApiKey}`,
+      };
+      const [placeResponse, addressResponse] = await Promise.all([
+        fetch(
+          `${KAKAO_LOCAL_KEYWORD_URL}?query=${encodeURIComponent(
+            keyword,
+          )}&size=15`,
+          { headers },
+        ),
+        fetch(
+          `${KAKAO_LOCAL_ADDRESS_URL}?query=${encodeURIComponent(
+            keyword,
+          )}&size=15`,
+          { headers },
+        ),
+      ]);
 
-      if (!response.ok) {
-        throw new Error("카카오 장소 검색에 실패했습니다.");
+      if (!placeResponse.ok || !addressResponse.ok) {
+        throw new Error("카카오 위치 검색에 실패했습니다.");
       }
 
-      const data = await response.json();
-      setResults(data.documents ?? []);
+      const placeData =
+        (await placeResponse.json()) as KakaoSearchResponse<KakaoPlaceDocument>;
+      const addressData =
+        (await addressResponse.json()) as KakaoSearchResponse<KakaoAddressDocument>;
+      const placeResults = (placeData.documents ?? []).map(
+        mapKakaoPlaceToSearchResult,
+      );
+      const addressResults = (addressData.documents ?? []).map(
+        mapKakaoAddressToSearchResult,
+      );
+      const mergedResults = isAddressLikeQuery(keyword)
+        ? [...addressResults, ...placeResults]
+        : [...placeResults, ...addressResults];
+
+      setResults(dedupeSearchResults(mergedResults));
       setHasSearched(true);
     } catch (error) {
       console.error(error);
-      setErrorMessage("장소를 검색하지 못했습니다. 잠시 후 다시 시도해주세요.");
+      setErrorMessage("위치를 검색하지 못했습니다. 잠시 후 다시 시도해주세요.");
       setHasSearched(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectPlace = (document: KakaoPlaceDocument) => {
-    onSelectPlace(mapKakaoPlaceToSelectedPlace(document));
+  const handleSelectPlace = (result: SearchResult) => {
+    onSelectPlace(mapSearchResultToSelectedPlace(result));
+  };
+
+  const handleOpenKakaoMap = async (result: SearchResult) => {
+    // const webUrl = result.kakaoMapUrl ?? createKakaoMapWebUrl(result);
+    const webUrl = createKakaoMapWebUrl(result);
+    const appUrl = createKakaoMapAppUrl(result);
+
+    if (Platform.OS === "web") {
+      await openUrlSafely(webUrl);
+      return;
+    }
+
+    try {
+      const canOpenKakaoMap = await Linking.canOpenURL(appUrl);
+
+      if (canOpenKakaoMap) {
+        await openUrlSafely(appUrl);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check KakaoMap app:", error);
+    }
+
+    try {
+      await openUrlSafely(webUrl);
+    } catch (error) {
+      console.error("Failed to open KakaoMap web:", error);
+    }
   };
 
   return (
@@ -208,15 +369,32 @@ export default function SearchLocationModal({
                     activeOpacity={0.75}
                     onPress={() => handleSelectPlace(result)}
                   >
-                    <Text style={styles.placeName}>{result.place_name}</Text>
-                    {!!result.road_address_name && (
+                    <View style={styles.resultHeader}>
+                      <Text style={styles.placeName}>{result.name}</Text>
+                      <TouchableOpacity
+                        style={styles.mapButton}
+                        activeOpacity={0.75}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          handleOpenKakaoMap(result);
+                        }}
+                        accessibilityLabel={`${result.name} 카카오맵 열기`}
+                      >
+                        <Ionicons
+                          name="map-outline"
+                          size={20}
+                          color="#4a9d6f"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {!!result.roadAddress && (
                       <Text style={styles.roadAddress}>
-                        도로명 {result.road_address_name}
+                        도로명 {result.roadAddress}
                       </Text>
                     )}
-                    {!!result.address_name && (
+                    {!!result.jibunAddress && (
                       <Text style={styles.address}>
-                        지번 {result.address_name}
+                        지번 {result.jibunAddress}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -349,10 +527,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     gap: 5,
   },
+  resultHeader: {
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   placeName: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "700",
     color: "#1a1a1a",
+  },
+  mapButton: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    backgroundColor: "#eef7f2",
   },
   roadAddress: {
     fontSize: 14,
