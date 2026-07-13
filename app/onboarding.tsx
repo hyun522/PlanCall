@@ -48,8 +48,8 @@ export default function OnboardingScreen() {
               <View style={styles.featureText}>
                 <Text style={styles.featureTitle}>이동 시간 계산</Text>
                 <Text style={styles.featureDescription}>
-                  출발지와 목적지, 이동 수단을 입력하면 자동으로 소요 시간을
-                  계산합니다
+                  출발지와 목적지, 이동 수단을 선택하면 이동 시간을 자동으로
+                  계산합니다.
                 </Text>
               </View>
             </View>
@@ -59,9 +59,10 @@ export default function OnboardingScreen() {
                 <Ionicons name="time" size={24} color="#4a9d6f" />
               </View>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>콜타임 설정 가능</Text>
+                <Text style={styles.featureTitle}>출발 시간 계산</Text>
                 <Text style={styles.featureDescription}>
-                  여유시간과 예식전 콜타임 시간을 설정 할 수 있습니다
+                  준비 시간과 여유 시간을 반영하여 준비 시작 시간과 출발 시간을
+                  계산합니다.
                 </Text>
               </View>
             </View>
@@ -71,9 +72,9 @@ export default function OnboardingScreen() {
                 <Ionicons name="notifications" size={24} color="#4a9d6f" />
               </View>
               <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>자동 알림 설정</Text>
+                <Text style={styles.featureTitle}>출발 알림</Text>
                 <Text style={styles.featureDescription}>
-                  일정 저장 시 출발 시간에 맞춰 알림이 자동으로 등록됩니다
+                  일정 저장 시 출발 시간에 맞춰 알림을 자동으로 등록합니다.
                 </Text>
               </View>
             </View>
