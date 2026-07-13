@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import React, {
   createContext,
   ReactNode,
@@ -63,6 +64,32 @@ const normalizeSettings = (storedSettings?: Partial<Settings>): Settings => ({
     storedSettings?.arrivalNotification ?? DEFAULT_SETTINGS.arrivalNotification,
 });
 
+const cancelEventNotifications = async (event: Event) => {
+  const notificationIds = new Set([
+    event.departureNotificationId,
+    event.preparationNotificationId,
+  ]);
+
+  const scheduledNotifications =
+    await Notifications.getAllScheduledNotificationsAsync();
+
+  scheduledNotifications.forEach((notification) => {
+    if (notification.content.data?.eventId === event.id) {
+      notificationIds.add(notification.identifier);
+    }
+  });
+
+  await Promise.all(
+    Array.from(notificationIds)
+      .filter((notificationId): notificationId is string =>
+        Boolean(notificationId),
+      )
+      .map((notificationId) =>
+        Notifications.cancelScheduledNotificationAsync(notificationId),
+      ),
+  );
+};
+
 export function EventProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>(MOCK_EVENTS);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -125,9 +152,22 @@ export function EventProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const deleteEvent = useCallback((id: string) => {
-    setEvents((prev) => prev.filter((event) => event.id !== id));
-  }, []);
+  const deleteEvent = useCallback(
+    async (id: string) => {
+      const eventToDelete = events.find((event) => event.id === id);
+
+      if (eventToDelete) {
+        try {
+          await cancelEventNotifications(eventToDelete);
+        } catch (error) {
+          console.error("Failed to cancel event notifications:", error);
+        }
+      }
+
+      setEvents((prev) => prev.filter((event) => event.id !== id));
+    },
+    [events],
+  );
 
   const updateSettings = useCallback((newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));

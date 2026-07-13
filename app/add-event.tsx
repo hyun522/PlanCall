@@ -395,7 +395,7 @@ export default function AddEventScreen() {
       return;
     }
 
-    await Notifications.scheduleNotificationAsync({
+    return Notifications.scheduleNotificationAsync({
       content: {
         title: "출발 시간입니다.",
         body: `${eventTime} ${eventName}에 출발하세요.`,
@@ -432,7 +432,7 @@ export default function AddEventScreen() {
       return;
     }
 
-    await Notifications.scheduleNotificationAsync({
+    return Notifications.scheduleNotificationAsync({
       content: {
         title: "준비를 시작할 시간입니다.",
         body: `${eventTime} ${eventName}을 위해 준비를 시작하세요.`,
@@ -488,6 +488,28 @@ export default function AddEventScreen() {
     }
 
     const eventId = Date.now().toString();
+    let departureNotificationId: string | undefined;
+    let preparationNotificationId: string | undefined;
+
+    try {
+      departureNotificationId = await scheduleDepartureNotification(
+        eventId,
+        formData.eventName,
+        formData.eventDate,
+        formData.eventTime,
+        calculated.departureTime,
+      );
+      preparationNotificationId = await schedulePreparationNotification(
+        eventId,
+        formData.eventName,
+        formData.eventDate,
+        formData.eventTime,
+        calculated.preparationStartTime,
+      );
+    } catch (error) {
+      console.error("Failed to schedule event notifications:", error);
+    }
+
     const newEvent = {
       id: eventId,
       eventName: formData.eventName,
@@ -502,28 +524,11 @@ export default function AddEventScreen() {
       // TODO: Add selectedRouteSummary when the Event model is updated.
       departureTime: calculated.departureTime,
       arrivalTime: calculated.arrivalTime,
+      departureNotificationId,
+      preparationNotificationId,
     };
 
     addEvent(newEvent);
-
-    try {
-      await scheduleDepartureNotification(
-        eventId,
-        formData.eventName,
-        formData.eventDate,
-        formData.eventTime,
-        calculated.departureTime,
-      );
-      await schedulePreparationNotification(
-        eventId,
-        formData.eventName,
-        formData.eventDate,
-        formData.eventTime,
-        calculated.preparationStartTime,
-      );
-    } catch (error) {
-      console.error("Failed to schedule event notifications:", error);
-    }
 
     router.back();
   };

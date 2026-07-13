@@ -27,6 +27,8 @@ export interface Event {
   travelTimeMinutes: number;
   departureTime: string;
   arrivalTime: string;
+  departureNotificationId?: string;
+  preparationNotificationId?: string;
 }
 
 export interface Settings {
@@ -43,7 +45,7 @@ export interface EventContextType {
   isLoaded: boolean;
   addEvent: (event: Event) => void;
   updateEvent: (id: string, event: Event) => void;
-  deleteEvent: (id: string) => void;
+  deleteEvent: (id: string) => Promise<void>;
   updateSettings: (settings: Partial<Settings>) => void;
   pendingLocationSelection: PendingLocationSelection | null;
   setPendingLocationSelection: (selection: PendingLocationSelection) => void;
