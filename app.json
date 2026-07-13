@@ -10,12 +10,15 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "LSApplicationQueriesSchemes": ["kakaomap"]
+        "LSApplicationQueriesSchemes": [
+          "kakaomap"
+        ]
       }
     },
     "android": {
       "package": "com.jcompany.plancall",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#E6F4FE"
       },
       "predictiveBackGestureEnabled": false
@@ -52,6 +55,7 @@
       "eas": {
         "projectId": "f7c6b962-894b-4b77-8eef-1e7738b41d59"
       }
-    }
+    },
+    "owner": "hyun522"
   }
 }
