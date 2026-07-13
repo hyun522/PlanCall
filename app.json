@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PlanCall",
-    "slug": "plancall",
+    "slug": "plan-call",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/plancall-logo.png",
