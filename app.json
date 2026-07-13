@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PlanCall",
-    "slug": "plan-call",
+    "slug": "plancall",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/plancall-logo.png",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "package": "com.j_company.plancall",
+      "package": "com.jcompany.plancall",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },
