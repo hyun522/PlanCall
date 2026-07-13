@@ -167,8 +167,12 @@ export default function SettingsScreen() {
             </View>
             <Switch
               value={formData.departureNotification}
+              // 정책변경으로 인한 주석
+              // onValueChange={(value) =>
+              //   setFormData({ ...formData, departureNotification: value })
+              // }
               onValueChange={(value) =>
-                setFormData({ ...formData, departureNotification: value })
+                setFormData({ ...formData, departureNotification: true })
               }
               trackColor={{ false: "#d1d5db", true: "#4a9d6f" }}
               thumbColor="#FFFFFF"
@@ -194,7 +198,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* TODO: 실제 일정 알림 연동 전 로컬 알림 검증용 임시 UI입니다. */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="notifications" size={20} color="#4a9d6f" />
             <Text style={styles.sectionTitle}>알림 테스트</Text>
@@ -209,7 +213,7 @@ export default function SettingsScreen() {
           >
             <Text style={styles.testNotificationButtonText}>알림 테스트</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </ScrollView>
 
       <View style={styles.footer}>
