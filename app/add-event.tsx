@@ -101,11 +101,29 @@ const getInitialFormData = () => {
   };
 };
 
+const isAndroidRuntimeNotificationPermissionRequired = () =>
+  Platform.OS === "android" && Number(Platform.Version) >= 33;
+
 const checkNotificationPermission = async (onOpenSettings?: () => void) => {
+  if (
+    Platform.OS === "android" &&
+    !isAndroidRuntimeNotificationPermissionRequired()
+  ) {
+    return true;
+  }
+
   const permission = await Notifications.getPermissionsAsync();
 
   if (permission.status === "granted") {
     return true;
+  }
+
+  if (Platform.OS === "android" && permission.canAskAgain) {
+    const requestedPermission = await Notifications.requestPermissionsAsync();
+
+    if (requestedPermission.status === "granted") {
+      return true;
+    }
   }
 
   Alert.alert(
