@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Redirect, Slot, useSegments } from "expo-router";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 import { EventProvider, useEvents } from "../contexts/EventContext";
 
 Notifications.setNotificationHandler({
@@ -36,6 +37,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <EventProvider>
         <RootLayoutContent />
+        <BannerAd
+          unitId="ca-app-pub-7843093290929613/4216903563"
+          size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER}
+        />
       </EventProvider>
     </GestureHandlerRootView>
   );
